@@ -1,0 +1,1 @@
+# The file /doctor-patient-portal/doctor-patient-portal/src/portal/__init__.py is intentionally left blank.
