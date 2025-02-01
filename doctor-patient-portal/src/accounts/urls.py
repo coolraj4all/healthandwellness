@@ -28,15 +28,10 @@ urlpatterns = [
         'get': 'retrieve',
     }), name='usertypes-details'),
 
-    path('patients/', views.PatientViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    }), name='patients-list'),
-    path('patients/<str:pk>/', views.PatientViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    }), name='patients-details'),
+    path('patients/list/', views.patient_list, name='patient-list'),
+    path('patients/add/', views.patient_create, name='patient-create'),
+    path('patients/<int:pk>/', views.patient_detail, name='patient-detail'),
+    path('patients/<int:pk>/edit/', views.patient_edit, name='patient-edit'),
 
     path('doctors/', views.DoctorViewSet.as_view({
         'get': 'list',

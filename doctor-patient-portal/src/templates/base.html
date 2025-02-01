@@ -17,7 +17,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'accounts:home' %}">
                 <i class="fas fa-heart text-danger me-2"></i>
-                Health & Wellness
+                Health & Wellness Center
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -27,12 +27,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:home' %}">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'diseases:disease-list' %}">Diseases</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'medicines:medicines-list' %}">Medicines</a>
-                    </li>
+                    {% if user.is_authenticated and user.user_type.user_type in 'Admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:patient-list' %}">Patients</a>
+                        </li>
+                    {% endif %}
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">

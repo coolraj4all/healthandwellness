@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.shortcuts import redirect
@@ -9,20 +9,23 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .serializers import (UserSerializer, PatientSerializer, 
                         DoctorSerializer, ReceptionistSerializer, UserTypeSerializer)
-from .models import User, Patient, Doctor, Reciptionist, UserTypes
+from .models import User, Patient, Doctor, Receptionist, UserTypes
+from .forms import UserRegistrationForm, PatientForm
+from django.core.paginator import Paginator
 
 def home(request):
     return render(request, 'home.html')
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('index')  # Redirect to a success page or home
+            messages.success(request, 'Registration successful!')
+            return redirect('accounts:home')
     else:
-        form = UserCreationForm()
+        form = UserRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
 def login_view(request):
@@ -32,12 +35,12 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('index')  # Redirect to a success page or home
+            return redirect('accounts:home')  # Redirect to a success page or home
     return render(request, 'accounts/login.html')
 
 def logout_view(request):
     logout(request)
-    return redirect('index')  # Redirect to a success page or home
+    return redirect('accounts:home')  # Redirect to a success page or home
 
 def profile(request):
     return render(request, 'accounts/profile.html')
@@ -58,146 +61,56 @@ def password_reset(request):
         form = PasswordResetForm()
     return render(request, 'accounts/password_reset.html', {'form': form})
 
-class UserTypeViewSet(viewsets.ViewSet):
-    def list(self, request):
-        user_types = UserTypes.objects.all()
-        serializer = UserTypeSerializer(user_types, many=True)
-        return Response(serializer.data)
+def patient_list(request):
+    patient_list = Patient.objects.all()
+    paginator = Paginator(patient_list, 10)  # Show 10 patients per page
+    page_number = request.GET.get('page')
+    patients = paginator.get_page(page_number)
+    return render(request, 'accounts/patients/patient_list.html', {'patients': patients})
 
-    def retrieve(self, request, pk=None):
-        try:
-            user_type = UserTypes.objects.get(pk=pk)
-        except UserTypes.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UserTypeSerializer(user_type)
-        return Response(serializer.data)
+def patient_detail(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    return render(request, 'accounts/patients/patient_detail.html', {'patient': patient})
 
-class UserViewSet(viewsets.ViewSet):
-    def list(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+def patient_create(request):
+    if request.method == 'POST':
+        form = PatientForm(request.POST)
+        if form.is_valid():
+            patient = form.save()
+            return redirect('accounts:patient-detail', pk=patient.pk)
+    else:
+        form = PatientForm()
+    return render(request, 'accounts/patients/patient_form.html', {'form': form, 'title': 'Add Patient'})
 
-    def create(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def patient_edit(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    if request.method == 'POST':
+        form = PatientForm(request.POST, instance=patient)
+        if form.is_valid():
+            patient = form.save()
+            return redirect('accounts:patient-detail', pk=patient.pk)
+    else:
+        form = PatientForm(instance=patient)
+    return render(request, 'accounts/patients/patient_form.html', {'form': form, 'title': 'Edit Patient'})
 
-    def retrieve(self, request, pk=None):
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-    
-    def update(self, request, pk=None):
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UserSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UserTypeViewSet(viewsets.ModelViewSet):
+    queryset = UserTypes.objects.all()
+    serializer_class = UserTypeSerializer
 
-class PatientViewSet(viewsets.ViewSet):
-    def list(self, request):
-        patients = Patient.objects.all()
-        serializer = PatientSerializer(patients, many=True)
-        return Response(serializer.data)
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-    def create(self, request):
-        serializer = PatientSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class PatientViewSet(viewsets.ModelViewSet):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
 
-    def retrieve(self, request, pk=None):
-        try:
-            patient = Patient.objects.get(pk=pk)
-        except Patient.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = PatientSerializer(patient)
-        return Response(serializer.data)
-    
-    def update(self, request, pk=None):
-        try:
-            patient = Patient.objects.get(pk=pk)
-        except Patient.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = PatientSerializer(patient, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class DoctorViewSet(viewsets.ModelViewSet):
+    queryset = Doctor.objects.all()
+    serializer_class = DoctorSerializer
 
-class DoctorViewSet(viewsets.ViewSet):
-    def list(self, request):
-        doctors = Doctor.objects.all()
-        serializer = DoctorSerializer(doctors, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = DoctorSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        try:
-            doctor = Doctor.objects.get(pk=pk)
-        except Doctor.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = DoctorSerializer(doctor)
-        return Response(serializer.data)
-    
-    def update(self, request, pk=None):
-        try:
-            doctor = Doctor.objects.get(pk=pk)
-        except Doctor.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = DoctorSerializer(doctor, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class ReceptionistViewSet(viewsets.ViewSet):
-    def list(self, request):
-        receptionists = Reciptionist.objects.all()
-        serializer = ReceptionistSerializer(receptionists, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = ReceptionistSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        try:
-            receptionist = Reciptionist.objects.get(pk=pk)
-        except Reciptionist.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ReceptionistSerializer(receptionist)
-        return Response(serializer.data)
-    
-    def update(self, request, pk=None):
-        try:
-            receptionist = Reciptionist.objects.get(pk=pk)
-        except Reciptionist.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ReceptionistSerializer(receptionist, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ReceptionistViewSet(viewsets.ModelViewSet):
+    queryset = Receptionist.objects.all()
+    serializer_class = ReceptionistSerializer
 
 
