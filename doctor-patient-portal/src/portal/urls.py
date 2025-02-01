@@ -16,9 +16,11 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
+    path('accounts/', include('accounts.urls',namespace='accounts')),
     path('appointments/', include('appointments.urls')),
     path('medical-records/', include('medical_records.urls')),
+    path('', include('diseases.urls', namespace='diseases')),  # Updated this line
+    path('medicines/', include('medicines.urls', namespace='medicines')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0)),
 ]

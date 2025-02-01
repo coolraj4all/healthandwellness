@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to Health & Wellness Portal{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-6">
+        <h1 class="display-4 fw-bold">Your Health, Our Priority</h1>
+        <p class="lead">Access comprehensive information about diseases, medicines, and connect with healthcare professionals.</p>
+        {% if not user.is_authenticated %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Login</h5>
+                    <form method="post" action="{% url 'accounts:login' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <a href="{% url 'accounts:password_reset' %}" class="btn btn-link">Forgot Password?</a>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <img src="{% static 'images/health-hero.svg' %}" alt="Health" class="img-fluid">
+    </div>
+</div>
+
+<div class="row g-4 py-5">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-disease fa-2x text-primary mb-3"></i>
+                <h5 class="card-title">Disease Information</h5>
+                <p class="card-text">Access detailed information about various diseases, symptoms, and treatments.</p>
+                <a href="{% url 'diseases:disease-list' %}" class="btn btn-outline-primary">Learn More</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-pills fa-2x text-primary mb-3"></i>
+                <h5 class="card-title">Medicine Database</h5>
+                <p class="card-text">Comprehensive database of medicines, their uses, and side effects.</p>
+                <a href="{% url 'medicines:medicines-list' %}" class="btn btn-outline-primary">Browse Medicines</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-user-md fa-2x text-primary mb-3"></i>
+                <h5 class="card-title">Healthcare Professionals</h5>
+                <p class="card-text">Connect with qualified healthcare professionals for consultations.</p>
+                <a href="{% url 'accounts:doctors-list' %}" class="btn btn-outline-primary">Find Doctors</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
