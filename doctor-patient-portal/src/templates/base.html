@@ -31,6 +31,12 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:patient-list' %}">Patients</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:doctor-list' %}">Doctors</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'appointments:appointment-create' %}">Book New Appointment</a>
+                        </li>
                     {% endif %}
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">

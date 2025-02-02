@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment Detail{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Appointment Details</h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Doctor:</dt>
+                        <dd class="col-sm-8">Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</dd>
+                        
+                        <dt class="col-sm-4">Date & Time:</dt>
+                        <dd class="col-sm-8">{{ appointment.appointment_date|date:"M d, Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ appointment.status|lower }}">{{ appointment.status }}</span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Reason:</dt>
+                        <dd class="col-sm-8">{{ appointment.reason }}</dd>
+                        
+                        {% if appointment.notes %}
+                        <dt class="col-sm-4">Notes:</dt>
+                        <dd class="col-sm-8">{{ appointment.notes }}</dd>
+                        {% endif %}
+                    </dl>
+                    
+                    <div class="text-end mt-3">
+                        <a href="{% url 'appointments:appointment-list' %}" class="btn btn-secondary">Back to List</a>
+                        {% if appointment.status == 'scheduled' %}
+                        <a href="{% url 'appointments:appointment-edit' appointment.pk %}" class="btn btn-warning">
+                            Edit Appointment
+                        </a>
+                        <button class="btn btn-danger cancel-appointment" data-id="{{ appointment.pk }}">
+                            Cancel Appointment
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

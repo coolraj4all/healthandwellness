@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Doctor Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ doctor.first_name }} {{ doctor.last_name }}</h5>
+            <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+            <p><strong>License Number:</strong> {{ doctor.license_number }}</p>
+            <p><strong>Gender:</strong> {{ doctor.gender }}</p>
+            <p><strong>Phone:</strong> {{ doctor.phone }}</p>
+            <p><strong>Address:</strong> {{ doctor.address }}</p>
+            <p><strong>Date of Birth:</strong> {{ doctor.date_of_birth }}</p>
+            <p><strong>Emergency Contact:</strong> {{ doctor.emergency_contact_name }}</p>
+            <p><strong>Emergency Phone:</strong> {{ doctor.emergency_contact_phone }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'accounts:doctor-edit' doctor.pk %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'accounts:doctor-delete' doctor.pk %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'accounts:doctor-list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

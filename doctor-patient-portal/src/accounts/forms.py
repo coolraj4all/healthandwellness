@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, UserTypes,Patient
+from .models import User, UserTypes, Patient, Doctor
 
 class UserRegistrationForm(UserCreationForm):
     user_type = forms.ModelChoiceField(
@@ -47,4 +47,14 @@ class PatientForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
             'emergency_contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class DoctorForm(forms.ModelForm):
+    class Meta:
+        model = Doctor
+        fields = ['first_name', 'last_name', 'gender', 'phone', 'address', 
+                 'date_of_birth', 'emergency_contact_name', 'emergency_contact_phone',
+                 'specialization', 'license_number']
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
         }

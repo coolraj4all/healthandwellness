@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Appointments</h2>
+        <a href="{% url 'appointments:patient-appointment-create' patient_id=patient.pk %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Book New Appointment
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Doctor</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>{{ appointment.appointment_date|date:"M d, Y H:i" }}</td>
+                    <td>Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</td>
+                    <td>{{ appointment.reason|truncatewords:10 }}</td>
+                    <td><span class="badge bg-{{ appointment.status|lower }}">{{ appointment.status }}</span></td>
+                    <td>
+                        <a href="{% url 'appointments:appointment-detail' appointment.pk %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if appointment.status == 'scheduled' %}
+                        <a href="{% url 'appointments:appointment-edit' appointment.pk %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-danger btn-sm cancel-appointment" data-id="{{ appointment.pk }}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

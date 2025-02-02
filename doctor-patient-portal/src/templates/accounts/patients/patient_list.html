@@ -36,6 +36,12 @@
                         <a href="{% url 'accounts:patient-edit' patient.pk %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i>
                         </a>
+                        <a href="{% url 'appointments:patient-appointment-create' patient_id=patient.pk %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-calendar-plus"></i> Book Appointment
+                        </a>
+                        <a href="{% url 'appointments:patient-appointments' patient_id=patient.pk %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-list"></i> View Appointments
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

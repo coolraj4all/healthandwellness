@@ -33,24 +33,15 @@ urlpatterns = [
     path('patients/<int:pk>/', views.patient_detail, name='patient-detail'),
     path('patients/<int:pk>/edit/', views.patient_edit, name='patient-edit'),
 
-    path('doctors/', views.DoctorViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    }), name='doctors-list'),
-    path('doctors/<str:pk>/', views.DoctorViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    }), name='doctors-details'),
+    path('doctors/list/', views.doctor_list, name='doctor-list'),
+    path('doctors/add/', views.doctor_create, name='doctor-create'),
+    path('doctors/<int:pk>/', views.doctor_detail, name='doctor-detail'),
+    path('doctors/<int:pk>/edit/', views.doctor_edit, name='doctor-edit'),
+    path('doctors/<int:pk>/delete/', views.doctor_delete, name='doctor-delete'),
 
-    path('receptionists/', views.ReceptionistViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    }), name='receptionists-list'),
-    path('receptionists/<str:pk>/', views.ReceptionistViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    }), name='receptionists-details'),
+    # path('receptionists/list/', views.receptionist_list, name='receptionist-list'),
+    # path('receptionists/add/', views.receptionist_create, name='receptionist-create'),
+    # path('receptionists/<int:pk>/', views.receptionist_detail, name='receptionist-detail'),
+    # path('receptionists/<int:pk>/edit/', views.receptionist_edit, name='receptionist-edit'),
 
 ]
