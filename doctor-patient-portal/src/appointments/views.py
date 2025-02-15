@@ -20,11 +20,7 @@ class AppointmentListView(LoginRequiredMixin, ListView):
     context_object_name = 'appointments'
 
     def get_queryset(self):
-        if hasattr(self.request.user, 'patient'):
-            return Appointment.objects.filter(patient=self.request.user.patient)
-        elif hasattr(self.request.user, 'doctor'):
-            return Appointment.objects.filter(doctor=self.request.user.doctor)
-        return Appointment.objects.none()
+        return Appointment.objects.all().order_by('appointment_date')
 
 class AppointmentCreateView(LoginRequiredMixin, CreateView):
     model = Appointment
@@ -162,7 +158,17 @@ class PatientAppointmentUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('appointments:patient-appointments', 
                           kwargs={'patient_id': self.object.patient.id})
+class PatientAppointmentDetailView(LoginRequiredMixin, DetailView):
+    model = Appointment
+    template_name = 'appointments/appointment_detail.html'
+    context_object_name = 'appointment'
 
+    def get_queryset(self):
+        queryset = Appointment.objects.all()
+        if hasattr(self.request.user, 'doctor') or self.request.user.is_staff:
+            return queryset
+        return queryset.filter(patient=self.request.user.patient)
+    
 def cancel_appointment(request, pk):
     # Update cancel_appointment view to handle staff/doctor cancellations
     if request.method == 'POST':
@@ -175,7 +181,7 @@ def cancel_appointment(request, pk):
 
         if appointment.cancel_appointment():
             messages.success(request, 'Appointment cancelled successfully.')
-            return JsonResponse({'status': 'success'})
+            return redirect('appointments:appointment-list')
         return JsonResponse({'status': 'error', 'message': 'Unable to cancel appointment'}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
