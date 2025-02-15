@@ -11,6 +11,23 @@
         </a>
     </div>
 
+    <!-- Add search form -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search by patient name..." value="{{ search_query }}">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                {% if search_query %}
+                    <a href="{% url 'accounts:patient-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
     <div class="table-responsive">
         <table class="table table-striped">
             <thead>

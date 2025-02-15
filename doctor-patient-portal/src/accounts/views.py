@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.shortcuts import redirect
 from django.contrib.auth.views import PasswordResetView
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib import messages
 from rest_framework import viewsets, status
@@ -62,11 +63,24 @@ def password_reset(request):
     return render(request, 'accounts/password_reset.html', {'form': form})
 
 def patient_list(request):
+    search_query = request.GET.get('search', '')
     patient_list = Patient.objects.all()
-    paginator = Paginator(patient_list, 10)  # Show 10 patients per page
+    
+    if search_query:
+        patient_list = patient_list.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(patient_list, 10)
     page_number = request.GET.get('page')
     patients = paginator.get_page(page_number)
-    return render(request, 'accounts/patients/patient_list.html', {'patients': patients})
+    
+    context = {
+        'patients': patients,
+        'search_query': search_query,
+    }
+    return render(request, 'accounts/patients/patient_list.html', context)
 
 def patient_detail(request, pk):
     patient = get_object_or_404(Patient, pk=pk)

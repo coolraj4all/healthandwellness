@@ -13,14 +13,53 @@ from rest_framework import status
 from .serializers import AppointmentSerializer
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
+from datetime import datetime
 
 class AppointmentListView(LoginRequiredMixin, ListView):
     model = Appointment
     template_name = 'appointments/appointment_list.html'
     context_object_name = 'appointments'
+    paginate_by = 10  # Number of appointments per page
 
     def get_queryset(self):
-        return Appointment.objects.all().order_by('appointment_date')
+        queryset = Appointment.objects.all()
+        
+        # Get search parameters from GET request
+        search_query = self.request.GET.get('search', '')
+        start_date = self.request.GET.get('start_date', '')
+        end_date = self.request.GET.get('end_date', '')
+
+        # Apply search filters
+        if search_query:
+            queryset = queryset.filter(
+                Q(patient__first_name__icontains=search_query) |
+                Q(patient__last_name__icontains=search_query)
+            )
+
+        # Apply date range filters
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                queryset = queryset.filter(appointment_date__gte=start_date)
+            except ValueError:
+                pass
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                queryset = queryset.filter(appointment_date__lte=end_date)
+            except ValueError:
+                pass
+
+        return queryset.order_by('-appointment_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        context['start_date'] = self.request.GET.get('start_date', '')
+        context['end_date'] = self.request.GET.get('end_date', '')
+        return context
 
 class AppointmentCreateView(LoginRequiredMixin, CreateView):
     model = Appointment
