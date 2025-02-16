@@ -27,7 +27,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:home' %}">Home</a>
                     </li>
-                    {% if user.is_authenticated and user.user_type.user_type in 'Admin' %}
+                    {% if user.is_authenticated and user.user_type.user_type in 'Admin,Doctor' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:patient-list' %}">Patients</a>
                         </li>

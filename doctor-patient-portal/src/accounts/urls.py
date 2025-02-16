@@ -38,6 +38,7 @@ urlpatterns = [
     path('doctors/<int:pk>/', views.doctor_detail, name='doctor-detail'),
     path('doctors/<int:pk>/edit/', views.doctor_edit, name='doctor-edit'),
     path('doctors/<int:pk>/delete/', views.doctor_delete, name='doctor-delete'),
+    path('doctors/<int:pk>/convert-to-user/', views.doctor_to_user, name='doctor-to-user'),
 
     # path('receptionists/list/', views.receptionist_list, name='receptionist-list'),
     # path('receptionists/add/', views.receptionist_create, name='receptionist-create'),

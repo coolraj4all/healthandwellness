@@ -23,8 +23,10 @@ class AppointmentListView(LoginRequiredMixin, ListView):
     paginate_by = 10  # Number of appointments per page
 
     def get_queryset(self):
-        queryset = Appointment.objects.all()
-        
+        queryset = Appointment.objects.filter(status='scheduled')
+        # Filter appointments based on user type
+        if self.request.user.user_type.user_type == 'Doctor':
+            queryset = queryset.filter(doctor=self.request.user.doctor)
         # Get search parameters from GET request
         search_query = self.request.GET.get('search', '')
         start_date = self.request.GET.get('start_date', '')
@@ -52,7 +54,7 @@ class AppointmentListView(LoginRequiredMixin, ListView):
             except ValueError:
                 pass
 
-        return queryset.order_by('-appointment_date')
+        return queryset.order_by('appointment_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

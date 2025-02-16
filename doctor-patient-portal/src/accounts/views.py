@@ -146,6 +146,33 @@ def doctor_delete(request, pk):
         return redirect('accounts:doctor-list')
     return render(request, 'accounts/doctors/doctor_confirm_delete.html', {'doctor': doctor})
 
+def doctor_to_user(request, pk):
+    if request.method == 'POST':
+        doctor = get_object_or_404(Doctor, pk=pk)
+        if doctor.is_user:
+            messages.error(request, 'This doctor already has a user account.')
+            return redirect('accounts:doctor-list')
+        
+        try:
+            # Generate username from first name and last name
+            username = f"{doctor.first_name.lower()}.{doctor.last_name.lower()}"
+            # Generate a random password
+            from django.utils.crypto import get_random_string
+            password = get_random_string(length=12)
+            
+            # Convert doctor to user
+            user = doctor.convert_to_user(username=username, password=password)
+            
+            messages.success(
+                request,
+                f'User account created successfully. Username: {username}, Password: {password}'
+            )
+        except Exception as e:
+            messages.error(request, f'Error creating user account: {str(e)}')
+        
+        return redirect('accounts:doctor-list')
+    return redirect('accounts:doctor-list')
+
 class UserTypeViewSet(viewsets.ModelViewSet):
     queryset = UserTypes.objects.all()
     serializer_class = UserTypeSerializer
