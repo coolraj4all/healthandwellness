@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Diseases</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <form class="d-flex" method="get">
+                <input class="form-control me-2" type="search" name="search" placeholder="Search diseases..." value="{{ search_query }}">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'diseases:disease-create' %}" class="btn btn-primary">Add New Disease</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Severity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for disease in diseases %}
+                <tr>
+                    <td>{{ disease.name }}</td>
+                    <td>{{ disease.category.name }}</td>
+                    <td>{{ disease.get_severity_level_display }}</td>
+                    <td>
+                        <a href="{% url 'diseases:disease-detail' disease.pk %}" class="btn btn-info btn-sm">View</a>
+                        <a href="{% url 'diseases:disease-update' disease.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'diseases:disease-delete' disease.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No diseases found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if diseases.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if diseases.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ diseases.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for i in diseases.paginator.page_range %}
+            <li class="page-item {% if diseases.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if diseases.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ diseases.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

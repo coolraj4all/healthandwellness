@@ -11,13 +11,9 @@ urlpatterns = [
     path('categories/<int:pk>/delete/', views.DiseaseCategoryViewSet.as_view({'get': 'destroy', 'post': 'destroy'}), name='category-delete'),
 
     # Disease URLs
-    path('diseases/', views.DiseaseViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    }), name='disease-list'),
-    path('diseases/<str:pk>/', views.DiseaseViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    }), name='disease-detail'),
+    path('diseases/', views.DiseaseViewSet.as_view({'get': 'list'}), name='disease-list'),
+    path('diseases/create/', views.DiseaseViewSet.as_view({'get': 'create', 'post': 'create'}), name='disease-create'),
+    path('diseases/<int:pk>/', views.DiseaseViewSet.as_view({'get': 'retrieve'}), name='disease-detail'),
+    path('diseases/<int:pk>/update/', views.DiseaseViewSet.as_view({'get': 'update', 'post': 'update'}), name='disease-update'),
+    path('diseases/<int:pk>/delete/', views.DiseaseViewSet.as_view({'get': 'destroy', 'post': 'destroy'}), name='disease-delete'),
 ]

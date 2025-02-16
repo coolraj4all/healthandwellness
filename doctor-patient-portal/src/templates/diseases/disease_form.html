@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>{% if disease %}Edit{% else %}Create New{% endif %} Disease</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ disease.name|default:'' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ disease.description|default:'' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="symptoms" class="form-label">Symptoms</label>
+                    <textarea class="form-control" id="symptoms" name="symptoms" rows="3" required>{{ disease.symptoms|default:'' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-control" id="category" name="category" required>
+                        <option value="">-- Select Category --</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if disease.category.id == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'diseases:disease-list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

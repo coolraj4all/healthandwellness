@@ -5,7 +5,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from .models import Disease, DiseaseCategory
 from .serializers import DiseaseSerializer, DiseaseCategorySerializer
-from .forms import DiseaseCategoryForm
+from .forms import DiseaseCategoryForm, DiseaseForm  # Add DiseaseForm here
 from django.core.paginator import Paginator
 from django.db.models import Q
 
@@ -75,40 +75,55 @@ class DiseaseCategoryViewSet(viewsets.ViewSet):
 
 class DiseaseViewSet(viewsets.ViewSet):
     def list(self, request):
-        diseases = Disease.objects.all()
-        serializer = DiseaseSerializer(diseases, many=True)
-        return Response(serializer.data)
+        diseases_list = Disease.objects.all()
+        search_query = request.GET.get('search', '')
+        
+        if search_query:
+            diseases_list = diseases_list.filter(
+                Q(name__icontains=search_query) |
+                Q(scientific_name__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+            
+        paginator = Paginator(diseases_list, 10)
+        page = request.GET.get('page')
+        diseases = paginator.get_page(page)
+        return render(request, 'diseases/disease_list.html', {
+            'diseases': diseases,
+            'search_query': search_query
+        })
 
     def create(self, request):
-        serializer = DiseaseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'POST':
+            form = DiseaseForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('diseases:disease-list')
+        else:
+            form = DiseaseForm()
+        return render(request, 'diseases/disease_form.html', {'form': form})
 
     def retrieve(self, request, pk=None):
-        try:
-            disease = Disease.objects.get(pk=pk)
-        except Disease.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = DiseaseSerializer(disease)
-        return Response(serializer.data)
+        disease = get_object_or_404(Disease, pk=pk)
+        return render(request, 'diseases/disease_detail.html', {'disease': disease})
 
     def update(self, request, pk=None):
-        try:
-            disease = Disease.objects.get(pk=pk)
-        except Disease.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = DiseaseSerializer(disease, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        disease = get_object_or_404(Disease, pk=pk)
+        if request.method == 'POST':
+            form = DiseaseForm(request.POST, instance=disease)
+            if form.is_valid():
+                form.save()
+                return redirect('diseases:disease-list')
+        else:
+            form = DiseaseForm(instance=disease)
+        return render(request, 'diseases/disease_form.html', {
+            'form': form,
+            'disease': disease
+        })
 
     def destroy(self, request, pk=None):
-        try:
-            disease = Disease.objects.get(pk=pk)
-        except Disease.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        disease.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        disease = get_object_or_404(Disease, pk=pk)
+        if request.method == 'POST':
+            disease.delete()
+            return redirect('diseases:disease-list')
+        return render(request, 'diseases/disease_confirm_delete.html', {'disease': disease})

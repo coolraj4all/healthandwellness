@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>{{ disease.name }}</h2>
+            {% if disease.scientific_name %}
+            <h6 class="text-muted">{{ disease.scientific_name }}</h6>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Category</h5>
+                    <p>{{ disease.category.name }}</p>
+
+                    <h5>Severity Level</h5>
+                    <p>{{ disease.get_severity_level_display }}</p>
+
+                    <h5>Contagious</h5>
+                    <p>{% if disease.is_contagious %}Yes{% else %}No{% endif %}</p>
+
+                    {% if disease.incubation_period %}
+                    <h5>Incubation Period</h5>
+                    <p>{{ disease.incubation_period }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <h5>Description</h5>
+                    <p>{{ disease.description }}</p>
+
+                    <h5>Symptoms</h5>
+                    <p>{{ disease.symptoms }}</p>
+
+                    <h5>Causes</h5>
+                    <p>{{ disease.causes }}</p>
+
+                    <h5>Treatment</h5>
+                    <p>{{ disease.treatment }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'diseases:disease-list' %}" class="btn btn-secondary">Back to List</a>
+            <a href="{% url 'diseases:disease-update' disease.pk %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'diseases:disease-delete' disease.pk %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
