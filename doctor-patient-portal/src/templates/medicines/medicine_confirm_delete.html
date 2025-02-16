@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Medicine{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Delete Medicine</h3>
+        </div>
+        <div class="card-body">
+            <p class="lead">Are you sure you want to delete the medicine "{{ medicine.name }}"?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Confirm Delete
+                </button>
+                <a href="{% url 'medicines:medicine-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

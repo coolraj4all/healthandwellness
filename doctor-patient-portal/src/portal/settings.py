@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'appointments',
     'medical_records',
     'diseases',
-    'medicines',
+    'medicines'
 ]
 AUTH_USER_MODEL = 'accounts.User'
 

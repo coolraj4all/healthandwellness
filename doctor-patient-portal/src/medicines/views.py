@@ -1,17 +1,22 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect,get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from django.urls import reverse
 from .models import Manufacturer, Medicine, Brand, MedicineRecommendation
 from .serializers import ManufacturerSerializer, MedicineSerializer, BrandSerializer, MedicineRecommendationSerializer
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.urls import reverse_lazy
+from .form import BrandForm
 
-class ManufacturerViewSet(viewsets.ViewSet):
+class MedicineRecommendationViewSet(viewsets.ViewSet):
     def list(self, request):
-        manufacturers = Manufacturer.objects.all()
-        serializer = ManufacturerSerializer(manufacturers, many=True)
+        recommendations = MedicineRecommendation.objects.all()
+        serializer = MedicineRecommendationSerializer(recommendations, many=True)
         return Response(serializer.data)
 
     def create(self, request):
-        serializer = ManufacturerSerializer(data=request.data)
+        serializer = MedicineRecommendationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -19,18 +24,18 @@ class ManufacturerViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            manufacturer = Manufacturer.objects.get(pk=pk)
-        except Manufacturer.DoesNotExist:
+            recommendation = MedicineRecommendation.objects.get(pk=pk)
+        except MedicineRecommendation.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ManufacturerSerializer(manufacturer)
+        serializer = MedicineRecommendationSerializer(recommendation)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
         try:
-            manufacturer = Manufacturer.objects.get(pk=pk)
-        except Manufacturer.DoesNotExist:
+            recommendation = MedicineRecommendation.objects.get(pk=pk)
+        except MedicineRecommendation.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ManufacturerSerializer(manufacturer, data=request.data)
+        serializer = MedicineRecommendationSerializer(recommendation, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -38,51 +43,93 @@ class ManufacturerViewSet(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         try:
-            manufacturer = Manufacturer.objects.get(pk=pk)
-        except Manufacturer.DoesNotExist:
+            recommendation = MedicineRecommendation.objects.get(pk=pk)
+        except MedicineRecommendation.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        manufacturer.delete()
+        recommendation.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class MedicineViewSet(viewsets.ViewSet):
-    def list(self, request):
-        medicines = Medicine.objects.all()
-        serializer = MedicineSerializer(medicines, many=True)
-        return Response(serializer.data)
+class ManufacturerListView(ListView):
+    model = Manufacturer
+    context_object_name = 'manufacturers'
+    template_name = 'medicines/manufacturer_list.html'
+    paginate_by = 10  # Add this line
 
-    def create(self, request):
-        serializer = MedicineSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        queryset = Manufacturer.objects.all()
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+        return queryset
 
-    def retrieve(self, request, pk=None):
-        try:
-            medicine = Medicine.objects.get(pk=pk)
-        except Medicine.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MedicineSerializer(medicine)
-        return Response(serializer.data)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
-    def update(self, request, pk=None):
-        try:
-            medicine = Medicine.objects.get(pk=pk)
-        except Medicine.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MedicineSerializer(medicine, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ManufacturerCreateView(CreateView):
+    model = Manufacturer
+    fields = ['name', 'description', 'website', 'country']
+    template_name = 'medicines/manufacturer_form.html'
+    success_url = reverse_lazy('medicines:manufacturer-list')
 
-    def destroy(self, request, pk=None):
-        try:
-            medicine = Medicine.objects.get(pk=pk)
-        except Medicine.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        medicine.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+class ManufacturerUpdateView(UpdateView):
+    model = Manufacturer
+    fields = ['name', 'description', 'website', 'country']
+    template_name = 'medicines/manufacturer_form.html'
+    success_url = reverse_lazy('medicines:manufacturer-list')
+
+class ManufacturerDetailView(DetailView):
+    model = Manufacturer
+    template_name = 'medicines/manufacturer_detail.html'
+
+class ManufacturerDeleteView(DeleteView):
+    model = Manufacturer
+    template_name = 'medicines/manufacturer_confirm_delete.html'
+    success_url = reverse_lazy('medicines:manufacturer-list')
+
+class MedicineListView(ListView):
+    model = Medicine
+    context_object_name = 'medicines'
+    template_name = 'medicines/medicine_list.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Medicine.objects.all()
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
+
+class MedicineCreateView(CreateView):
+    model = Medicine
+    fields = ['name', 'generic_name', 'form', 'strength', 'description', 'composition', 
+              'manufacturer', 'storage_instructions', 'side_effects', 'precautions', 
+              'price', 'requires_prescription']
+    template_name = 'medicines/medicine_form.html'
+    success_url = reverse_lazy('medicines:medicine-list')
+
+class MedicineUpdateView(UpdateView):
+    model = Medicine
+    fields = ['name', 'generic_name', 'form', 'strength', 'description', 'composition', 
+              'manufacturer', 'storage_instructions', 'side_effects', 'precautions', 
+              'price', 'requires_prescription']
+    template_name = 'medicines/medicine_form.html'
+    success_url = reverse_lazy('medicines:medicine-list')
+
+class MedicineDetailView(DetailView):
+    model = Medicine
+    template_name = 'medicines/medicine_detail.html'
+
+class MedicineDeleteView(DeleteView):
+    model = Medicine
+    template_name = 'medicines/medicine_confirm_delete.html'
+    success_url = reverse_lazy('medicines:medicine-list')
 
 class BrandViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -124,42 +171,53 @@ class BrandViewSet(viewsets.ViewSet):
         brand.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class MedicineRecommendationViewSet(viewsets.ViewSet):
-    def list(self, request):
-        recommendations = MedicineRecommendation.objects.all()
-        serializer = MedicineRecommendationSerializer(recommendations, many=True)
-        return Response(serializer.data)
+class BrandListView(ListView):
+    model = Brand
+    context_object_name = 'brands'
+    template_name = 'medicines/brand_list.html'
+    paginate_by = 10
 
-    def create(self, request):
-        serializer = MedicineRecommendationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        queryset = Brand.objects.all()
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+        return queryset
 
-    def retrieve(self, request, pk=None):
-        try:
-            recommendation = MedicineRecommendation.objects.get(pk=pk)
-        except MedicineRecommendation.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MedicineRecommendationSerializer(recommendation)
-        return Response(serializer.data)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
-    def update(self, request, pk=None):
-        try:
-            recommendation = MedicineRecommendation.objects.get(pk=pk)
-        except MedicineRecommendation.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MedicineRecommendationSerializer(recommendation, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class BrandCreateView(CreateView):
+    model = Brand
+    form_class = BrandForm
+    template_name = 'medicines/brand_form.html'
+    success_url = reverse_lazy('medicines:brand-list')
 
-    def destroy(self, request, pk=None):
-        try:
-            recommendation = MedicineRecommendation.objects.get(pk=pk)
-        except MedicineRecommendation.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        recommendation.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['manufacturers'] = Manufacturer.objects.all()
+        context['medicines'] = Medicine.objects.all()
+        return context
+
+class BrandUpdateView(UpdateView):
+    model = Brand
+    form_class = BrandForm
+    template_name = 'medicines/brand_form.html'
+    success_url = reverse_lazy('medicines:brand-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['manufacturers'] = Manufacturer.objects.all()
+        context['medicines'] = Medicine.objects.all()
+        return context
+
+class BrandDetailView(DetailView):
+    model = Brand
+    template_name = 'medicines/brand_detail.html'
+
+class BrandDeleteView(DeleteView):
+    model = Brand
+    template_name = 'medicines/brand_confirm_delete.html'
+    success_url = reverse_lazy('medicines:brand-list')
