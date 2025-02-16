@@ -99,9 +99,12 @@ class DiseaseViewSet(viewsets.ViewSet):
             if form.is_valid():
                 form.save()
                 return redirect('diseases:disease-list')
+            categories = DiseaseCategory.objects.all()
+            return render(request, 'diseases/disease_form.html', {'form': form, 'categories': categories})
         else:
             form = DiseaseForm()
-        return render(request, 'diseases/disease_form.html', {'form': form})
+            categories = DiseaseCategory.objects.all()
+            return render(request, 'diseases/disease_form.html', {'form': form, 'categories': categories})
 
     def retrieve(self, request, pk=None):
         disease = get_object_or_404(Disease, pk=pk)
@@ -109,6 +112,7 @@ class DiseaseViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         disease = get_object_or_404(Disease, pk=pk)
+        categories = DiseaseCategory.objects.all()  # Move this line here
         if request.method == 'POST':
             form = DiseaseForm(request.POST, instance=disease)
             if form.is_valid():
@@ -118,7 +122,8 @@ class DiseaseViewSet(viewsets.ViewSet):
             form = DiseaseForm(instance=disease)
         return render(request, 'diseases/disease_form.html', {
             'form': form,
-            'disease': disease
+            'disease': disease,
+            'categories': categories
         })
 
     def destroy(self, request, pk=None):
