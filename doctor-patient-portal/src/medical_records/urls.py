@@ -1,32 +1,22 @@
 from django.urls import path
 from . import views
-
+app_name = 'records'
 urlpatterns = [
-    path('medical-histories/', views.PatientMedicalHistoryViewSet.as_view({
+    path('health/', views.PatientMedicationViewSet.as_view({
         'get': 'list',
         'post': 'create'
-    })),
-    path('medical-histories/<str:pk>/', views.PatientMedicalHistoryViewSet.as_view({
+    }), name='patient-health-list'),
+    path('health/create/', views.PatientMedicationViewSet.as_view({
+        'get': 'create',
+        'post': 'create'
+    }), name='patient-health-create'),
+    path('health/<int:pk>/', views.PatientMedicationViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'
-    })),
-    path('surgical-histories/', views.PatientSurgicalHistoryViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    })),
-    path('surgical-histories/<str:pk>/', views.PatientSurgicalHistoryViewSet.as_view({
+    }), name='patient-health-detail'),
+    path('health/<int:pk>/update/', views.PatientMedicationViewSet.as_view({
         'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    })),
-    path('medications/', views.PatientMedicationViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    })),
-    path('medications/<str:pk>/', views.PatientMedicationViewSet.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'delete': 'destroy'
-    })),
+        'post': 'update'
+    }), name='patient-health-update'),
 ]

@@ -79,6 +79,18 @@
                             </button>
                         </form>
                         {% endif %}
+                        <!-- Add new health record button -->
+                        {% if appointment.status == 'scheduled' %}
+                            {% if appointment.appointment_details %}
+                            <a href="{% url 'records:patient-health-update' appointment.appointment_details.id %}" class="btn btn-success btn-sm" title="Update Health Record">
+                                <i class="fas fa-notes-medical"></i>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'records:patient-health-create' %}?appointment={{ appointment.id }}&patient={{ appointment.patient.id }}" class="btn btn-primary btn-sm" title="Create Health Record">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>
+                            {% endif %}
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

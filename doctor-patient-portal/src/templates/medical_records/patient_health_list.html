@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Patient Health Records</h2>
+        <a href="{% url 'records:patient-health-create' %}" class="btn btn-primary">Add New Record</a>
+    </div>
+    
+    <div class="row">
+        {% for health in health_records %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Patient: {{ health.patient.first_name }} {{ health.patient.last_name }}</h5>
+                    <p class="card-text">
+                        <strong>Height:</strong> {{ health.height }} cm<br>
+                        <strong>Weight:</strong> {{ health.weight }} kg<br>
+                        <strong>BMI:</strong> {{ health.bmi }}<br>
+                        <strong>Follow-up Date:</strong> {{ health.follow_up_date }}
+                    </p>
+                    <a href="{% url 'records:patient-health-update' health.id %}" class="btn btn-secondary">Edit</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center">No health records found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

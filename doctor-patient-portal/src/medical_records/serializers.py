@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PatientMedicalHistory, PatientSurgicalHistory, PatientMedication
+from .models import PatientMedicalHistory, PatientSurgicalHistory, PatientHealthDetails, PatientMedicineDetails
 
 class PatientMedicalHistorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,7 @@ class PatientSurgicalHistorySerializer(serializers.ModelSerializer):
         model = PatientSurgicalHistory
         fields = '__all__'
 
-class PatientMedicationSerializer(serializers.ModelSerializer):
+class PatientHealthDetailsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PatientMedication
+        model = PatientHealthDetails
         fields = '__all__'
