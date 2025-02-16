@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}New{% endif %} Medicine
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        {% if form.instance.pk %}Edit{% else %}New{% endif %} Medicine
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="{{ form.name.value|default:'' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="generic_name" class="form-label">Generic Name</label>
+                                    <input type="text" class="form-control" id="generic_name" name="generic_name" 
+                                           value="{{ form.generic_name.value|default:'' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="form" class="form-label">Form</label>
+                                    <input type="text" class="form-control" id="form" name="form" 
+                                           value="{{ form.form.value|default:'' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="strength" class="form-label">Strength</label>
+                                    <input type="text" class="form-control" id="strength" name="strength" 
+                                           value="{{ form.strength.value|default:'' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="manufacturer" class="form-label">Manufacturer</label>
+                                    <select class="form-select" id="manufacturer" name="manufacturer" required>
+                                        <option value="">Select manufacturer</option>
+                                        {% for choice in form.manufacturer.field.choices %}
+                                            <option value="{{ choice.0 }}" {% if form.manufacturer.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" 
+                                           value="{{ form.price.value|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" 
+                                              rows="3">{{ form.description.value|default:'' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="composition" class="form-label">Composition</label>
+                                    <textarea class="form-control" id="composition" name="composition" 
+                                              rows="3">{{ form.composition.value|default:'' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="storage_instructions" class="form-label">Storage Instructions</label>
+                                    <textarea class="form-control" id="storage_instructions" name="storage_instructions" 
+                                              rows="2">{{ form.storage_instructions.value|default:'' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="side_effects" class="form-label">Side Effects</label>
+                                    <textarea class="form-control" id="side_effects" name="side_effects" 
+                                              rows="2">{{ form.side_effects.value|default:'' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="precautions" class="form-label">Precautions</label>
+                                    <textarea class="form-control" id="precautions" name="precautions" 
+                                              rows="2">{{ form.precautions.value|default:'' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="requires_prescription" 
+                                               name="requires_prescription" {% if form.requires_prescription.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="requires_prescription">Requires Prescription</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'medicines:medicine-list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
