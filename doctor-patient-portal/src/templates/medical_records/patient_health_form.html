@@ -51,35 +51,19 @@
                         <div class="row mb-3">
                             <label class="col-md-4 col-form-label">Patient:</label>
                             <div class="col-md-8">
-                                <select name="patient" class="form-control form-control-sm" required {% if selected_patient %}disabled{% endif %}>
-                                    <option value="">Select Patient</option>
-                                    {% for patient in patients %}
-                                    <option value="{{ patient.id }}" 
-                                        {% if selected_patient.id == patient.id or health_record.patient.id == patient.id %}selected{% endif %}>
-                                        {{ patient.first_name }} {{ patient.last_name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                {% if selected_patient %}
-                                <input type="hidden" name="patient" value="{{ selected_patient.id }}">
-                                {% endif %}
+                                <input type="text" class="form-control form-control-sm" 
+                                    value="{% if selected_patient %}{{ selected_patient.first_name }} {{ selected_patient.last_name }}{% elif health_record.patient %}{{ health_record.patient.first_name }} {{ health_record.patient.last_name }}{% endif %}" 
+                                    readonly>
+                                <input type="hidden" name="patient" value="{% if selected_patient %}{{ selected_patient.id }}{% elif health_record.patient %}{{ health_record.patient.id }}{% endif %}">
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-md-4 col-form-label">Date:</label>
                             <div class="col-md-8">
-                                <select name="appointment" class="form-control form-control-sm" required {% if selected_appointment %}disabled{% endif %}>
-                                    <option value="">Select Appointment</option>
-                                    {% for appointment in appointments %}
-                                    <option value="{{ appointment.id }}"
-                                        {% if selected_appointment.id == appointment.id or health_record.appointment.id == appointment.id %}selected{% endif %}>
-                                        {{ appointment.appointment_date }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                {% if selected_appointment %}
-                                <input type="hidden" name="appointment" value="{{ selected_appointment.id }}">
-                                {% endif %}
+                                <input type="text" class="form-control form-control-sm" 
+                                    value="{% if selected_appointment %}{{ selected_appointment.appointment_date }}{% elif health_record.appointment %}{{ health_record.appointment.appointment_date }}{% endif %}" 
+                                    readonly>
+                                <input type="hidden" name="appointment" value="{% if selected_appointment %}{{ selected_appointment.id }}{% elif health_record.appointment %}{{ health_record.appointment.id }}{% endif %}">
                             </div>
                         </div>
                     </div>
@@ -210,7 +194,8 @@
                     </div>
                 </div>
                 
-                <!-- Presenting Complaints & Consultation Section -->
+                <!-- Consultation Details Section - Only visible to doctors -->
+                {% if user.is_authenticated and user.user_type.user_type == 'Doctor' %}
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card border-0">
@@ -222,6 +207,91 @@
                                     <label class="form-label">Presenting Complaints:</label>
                                     <textarea name="presenting_complaints" class="form-control" rows="3" required>{{ health_record.presenting_complaints }}</textarea>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Provisional Diagnosis:</label>
+                                    <textarea name="provisional_diagnosis" class="form-control" rows="3" required>{{ health_record.provisional_diagnosis }}</textarea>
+                                </div>
+
+                                <!-- Medicines Section moved here -->
+                                {% if health_record.id %}
+                                <div class="mb-4">
+                                    <div class="card border-0">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-prescription me-2"></i>Prescribed Medicines
+                                            </h5>
+                                            <a href="{% url 'records:medicine-details-create' %}?health_record={{ health_record.id }}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-plus me-1"></i>Add New Medicine
+                                            </a>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if health_record.medicine_details.all %}
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-striped">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Medicine</th>
+                                                            <th>Dosage</th>
+                                                            <th>Morning</th>
+                                                            <th>Afternoon</th>
+                                                            <th>Evening</th>
+                                                            <th>Night</th>
+                                                            <th>Days</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for medicine_detail in health_record.medicine_details.all %}
+                                                        <tr>
+                                                            <td>{{ medicine_detail.medicine.name }}</td>
+                                                            <td>{{ medicine_detail.dosage }}</td>
+                                                            <td class="text-center">
+                                                                {% if medicine_detail.morning_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
+                                                                {% if medicine_detail.morning_after_meal %}<span class="badge bg-success">After</span>{% endif %}
+                                                            </td>
+                                                            <td class="text-center">
+                                                                {% if medicine_detail.afternoon_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
+                                                                {% if medicine_detail.afternoon_after_meal %}<span class="badge bg-success">After</span>{% endif %}
+                                                            </td>
+                                                            <td class="text-center">
+                                                                {% if medicine_detail.evening_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
+                                                                {% if medicine_detail.evening_after_meal %}<span class="badge bg-success">After</span>{% endif %}
+                                                            </td>
+                                                            <td class="text-center">
+                                                                {% if medicine_detail.night_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
+                                                                {% if medicine_detail.night_after_meal %}<span class="badge bg-success">After</span>{% endif %}
+                                                            </td>
+                                                            <td class="text-center">{{ medicine_detail.days }}</td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <a href="{% url 'records:medicine-details-update' medicine_detail.id %}" class="btn btn-outline-primary">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </a>
+                                                                    <a href="{% url 'records:medicine-details-delete' medicine_detail.id %}" class="btn btn-outline-danger"
+                                                                       onclick="return confirm('Are you sure you want to delete this medicine?')">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {% else %}
+                                            <div class="text-center py-4">
+                                                <i class="fas fa-prescription-bottle-alt fa-3x text-muted mb-3"></i>
+                                                <p>No medicines prescribed yet.</p>
+                                                <a href="{% url 'records:medicine-details-create' %}?health_record={{ health_record.id }}" class="btn btn-primary">
+                                                    <i class="fas fa-plus me-1"></i>Add Medicines
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Investigation Advice:</label>
@@ -236,87 +306,6 @@
                                     <label class="form-label">Follow-up Date:</label>
                                     <input type="date" name="follow_up_date" class="form-control" value="{{ health_record.follow_up_date|date:'Y-m-d' }}" required>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Medicines Section - Styled like the prescription table in the PDF -->
-                {% if health_record.id %}
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card border-0">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-prescription me-2"></i>Prescribed Medicines
-                                </h5>
-                                <a href="{% url 'records:medicine-details-create' %}?health_record={{ health_record.id }}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-plus me-1"></i>Add New Medicine
-                                </a>
-                            </div>
-                            <div class="card-body">
-                                {% if health_record.medicine_details.all %}
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Medicine</th>
-                                                <th>Dosage</th>
-                                                <th>Morning</th>
-                                                <th>Afternoon</th>
-                                                <th>Evening</th>
-                                                <th>Night</th>
-                                                <th>Days</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for medicine_detail in health_record.medicine_details.all %}
-                                            <tr>
-                                                <td>{{ medicine_detail.medicine.name }}</td>
-                                                <td>{{ medicine_detail.dosage }}</td>
-                                                <td class="text-center">
-                                                    {% if medicine_detail.morning_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
-                                                    {% if medicine_detail.morning_after_meal %}<span class="badge bg-success">After</span>{% endif %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% if medicine_detail.afternoon_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
-                                                    {% if medicine_detail.afternoon_after_meal %}<span class="badge bg-success">After</span>{% endif %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% if medicine_detail.evening_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
-                                                    {% if medicine_detail.evening_after_meal %}<span class="badge bg-success">After</span>{% endif %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% if medicine_detail.night_before_meal %}<span class="badge bg-info">Before</span>{% endif %}
-                                                    {% if medicine_detail.night_after_meal %}<span class="badge bg-success">After</span>{% endif %}
-                                                </td>
-                                                <td class="text-center">{{ medicine_detail.days }}</td>
-                                                <td>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <a href="{% url 'records:medicine-details-update' medicine_detail.id %}" class="btn btn-outline-primary">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <a href="{% url 'records:medicine-details-delete' medicine_detail.id %}" class="btn btn-outline-danger"
-                                                           onclick="return confirm('Are you sure you want to delete this medicine?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% else %}
-                                <div class="text-center py-4">
-                                    <i class="fas fa-prescription-bottle-alt fa-3x text-muted mb-3"></i>
-                                    <p>No medicines prescribed yet.</p>
-                                    <a href="{% url 'records:medicine-details-create' %}?health_record={{ health_record.id }}" class="btn btn-primary">
-                                        <i class="fas fa-plus me-1"></i>Add Medicines
-                                    </a>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>

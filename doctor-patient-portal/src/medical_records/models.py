@@ -49,6 +49,7 @@ class PatientHealthDetails(models.Model):
     p_a = models.CharField(max_length=20,blank=True,null=True)
     cns = models.CharField(max_length=20,blank=True,null=True)
     presenting_complaints = models.TextField(blank=True,null=True)
+    provisional_diagnosis = models.TextField(blank=True,null=True)
     medicines = models.ManyToManyField(Medicine, through='PatientMedicineDetails', related_name='medicines')
     investigation_advice = models.TextField(blank=True,null=True)
     diet_advice = models.TextField(blank=True,null=True)
