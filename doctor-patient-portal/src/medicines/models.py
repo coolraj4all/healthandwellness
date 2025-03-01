@@ -59,20 +59,10 @@ class Brand(models.Model):
     
 class MedicineRecommendation(models.Model):
    disease = models.ForeignKey(Disease, on_delete=models.CASCADE)
-   medicine_recommendations = models.ManyToManyField(Medicine, related_name='alternative_recommendations')
-   recommendation_type = models.CharField(max_length=50, choices=[
-       ('FIRST_LINE', 'First Line Treatment'),
-       ('SECOND_LINE', 'Second Line Treatment'),
-       ('ALTERNATIVE', 'Alternative Treatment')
-   ])
+   medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
    special_instructions = models.TextField(blank=True)
    contraindications = models.TextField(blank=True)
    effectiveness_rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
-   evidence_level = models.CharField(max_length=50, choices=[
-       ('HIGH', 'High Quality Evidence'),
-       ('MODERATE', 'Moderate Quality Evidence'),
-       ('LOW', 'Low Quality Evidence')
-   ])
    created_at = models.DateTimeField(auto_now_add=True)
    updated_at = models.DateTimeField(auto_now=True)
 

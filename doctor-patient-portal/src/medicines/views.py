@@ -227,44 +227,33 @@ class BrandDeleteView(DeleteView):
 
 def search_medicines(request):
     search_query = request.GET.get('search', '')
+    search_query = f"%{search_query}%"
     medicines_list = []
     
     if search_query:
-        # Search diseases by symptoms
-        diseases = Disease.objects.filter(symptoms__icontains=search_query)
+        # Update the disease filter to use case-insensitive contains lookup
+        # This is equivalent to SELECT * FROM public.diseases_disease where symptoms like '%Cough%'
+        diseases = Disease.objects.filter(symptoms__icontains=search_query.strip('%'))
         
         # Get medicine recommendations for found diseases
         medicine_recommendations = MedicineRecommendation.objects.filter(
             disease__in=diseases
         ).select_related('disease')
-        
-        # Organize medicines by recommendation type
-        categorized_medicines = {
-            'FIRST_LINE': [],
-            'SECOND_LINE': [],
-            'ALTERNATIVE': []
+
+        # Get medicines for found recommendations
+        for recommendation in medicine_recommendations:
+            medicines_list.append(recommendation.medicine)   
+    # Convert medicines list to a list of dictionaries
+    medicines_data = [
+        {
+            'id': medicine.id,
+            'name': medicine.name,
+            'form': medicine.form,
+            'strength': medicine.strength,
+            'composition': medicine.composition,
+            'manufacturer': medicine.manufacturer.name  # Convert decimal to string for JSON
         }
-        
-        for rec in medicine_recommendations:
-            for medicine in rec.medicine_recommendations.all():
-                categorized_medicines[rec.recommendation_type].append({
-                    'medicine': medicine,
-                    'disease': rec.disease,
-                    'special_instructions': rec.special_instructions,
-                    'effectiveness_rating': rec.effectiveness_rating
-                })
-        
-        # Also search directly in medicines
-        direct_medicines = Medicine.objects.filter(
-            Q(name__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(generic_name__icontains=search_query)
-        )
-        
-        return JsonResponse({
-            'categorized_medicines': categorized_medicines,
-            'direct_medicines': list(direct_medicines.values()),
-            'query': search_query
-        })
-    
-    return JsonResponse({'error': 'No search query provided'})
+        for medicine in medicines_list
+    ]
+
+    return JsonResponse({'medicines': medicines_data}, safe=False)

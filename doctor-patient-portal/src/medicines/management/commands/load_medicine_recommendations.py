@@ -263,50 +263,61 @@ class Command(BaseCommand):
 
         for disease_name, data in recommendations.items():
             try:
-                disease = Disease.objects.get(name=disease_name)
-                
+                # Changed from get() to filter().first() to avoid MultipleObjectsReturned
+                disease = Disease.objects.filter(name=disease_name).first()
+                if not disease:
+                    self.stdout.write(self.style.WARNING(f'Disease {disease_name} not found'))
+                    continue
+
                 # Create first line recommendations
                 for med_name in data['first_line']:
-                    medicine = Medicine.objects.get(name=med_name)
-                    MedicineRecommendation.objects.create(
-                        disease=disease,
-                        medicine_recommendations=medicine,
-                        recommendation_type='FIRST_LINE',
-                        special_instructions=data['instructions'],
-                        contraindications=data['contraindications'],
-                        effectiveness_rating=data['effectiveness'],
-                        evidence_level=data['evidence']
-                    )
+                    try:
+                        medicine = Medicine.objects.get(name=med_name)
+                        MedicineRecommendation.objects.create(
+                            disease=disease,
+                            medicine=medicine,
+                            recommendation_type='FIRST_LINE',
+                            special_instructions=data['instructions'],
+                            contraindications=data['contraindications'],
+                            effectiveness_rating=data['effectiveness'],
+                            evidence_level=data['evidence']
+                        )
+                    except Medicine.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(f'Medicine {med_name} not found'))
 
                 # Create second line recommendations
                 for med_name in data['second_line']:
-                    medicine = Medicine.objects.get(name=med_name)
-                    MedicineRecommendation.objects.create(
-                        disease=disease,
-                        medicine_recommendations=medicine,
-                        recommendation_type='SECOND_LINE',
-                        special_instructions=data['instructions'],
-                        contraindications=data['contraindications'],
-                        effectiveness_rating=data['effectiveness'] - 1,
-                        evidence_level=data['evidence']
-                    )
+                    try:
+                        medicine = Medicine.objects.get(name=med_name)
+                        MedicineRecommendation.objects.create(
+                            disease=disease,
+                            medicine=medicine,
+                            recommendation_type='SECOND_LINE',
+                            special_instructions=data['instructions'],
+                            contraindications=data['contraindications'],
+                            effectiveness_rating=data['effectiveness'] - 1,
+                            evidence_level=data['evidence']
+                        )
+                    except Medicine.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(f'Medicine {med_name} not found'))
 
                 # Create alternative recommendations
                 for med_name in data['alternative']:
-                    medicine = Medicine.objects.get(name=med_name)
-                    MedicineRecommendation.objects.create(
-                        disease=disease,
-                        medicine_recommendations=medicine,
-                        recommendation_type='ALTERNATIVE',
-                        special_instructions=data['instructions'],
-                        contraindications=data['contraindications'],
-                        effectiveness_rating=data['effectiveness'] - 2,
-                        evidence_level='MODERATE'
-                    )
+                    try:
+                        medicine = Medicine.objects.get(name=med_name)
+                        MedicineRecommendation.objects.create(
+                            disease=disease,
+                            medicine=medicine,
+                            recommendation_type='ALTERNATIVE',
+                            special_instructions=data['instructions'],
+                            contraindications=data['contraindications'],
+                            effectiveness_rating=data['effectiveness'] - 2,
+                            evidence_level='MODERATE'
+                        )
+                    except Medicine.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(f'Medicine {med_name} not found'))
 
-            except Disease.DoesNotExist:
-                self.stdout.write(self.style.WARNING(f'Disease {disease_name} not found'))
-            except Medicine.DoesNotExist:
-                self.stdout.write(self.style.WARNING(f'Medicine {med_name} not found'))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'Error processing {disease_name}: {str(e)}'))
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded medicine recommendations'))

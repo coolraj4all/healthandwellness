@@ -22,49 +22,45 @@
     .effectiveness-badge {
         float: right;
     }
+    .search-container {
+        margin-bottom: 20px;
+    }
+    .search-results {
+        display: none;
+        margin-top: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+    }
+    .result-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .result-item:last-child {
+        border-bottom: none;
+    }
+    .selection-controls {
+        margin-top: 15px;
+        text-align: right;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>Prescribe Medicines</h2>
-    
-    <!-- Add Search Section -->
-    <div class="card mb-4">
-        <div class="card-header">
-            Search Medicines by Symptoms
+
+    <!-- Add search section before the form -->
+    <div class="search-container">
+        <div class="input-group">
+            <input type="text" id="medicine-search" class="form-control" placeholder="Search medicines by symptoms...">
+            <button class="btn btn-primary" type="button" id="search-button">Search</button>
         </div>
-        <div class="card-body">
-            <div class="input-group mb-3">
-                <input type="text" id="searchInput" class="form-control" placeholder="Enter symptoms...">
-                <button class="btn btn-primary" type="button" id="searchButton">Search</button>
-            </div>
-            
-            <!-- Search Results Section -->
-            <div id="searchResults" class="search-results" style="display: none;">
-                <!-- First Line Treatments -->
-                <div class="medicine-category" id="firstLineTreatments">
-                    <h4>First Line Treatments</h4>
-                    <div class="medicine-list"></div>
-                </div>
-                
-                <!-- Second Line Treatments -->
-                <div class="medicine-category" id="secondLineTreatments">
-                    <h4>Second Line Treatments</h4>
-                    <div class="medicine-list"></div>
-                </div>
-                
-                <!-- Alternative Treatments -->
-                <div class="medicine-category" id="alternativeTreatments">
-                    <h4>Alternative Treatments</h4>
-                    <div class="medicine-list"></div>
-                </div>
-                
-                <!-- Direct Medicine Matches -->
-                <div class="medicine-category" id="directMatches">
-                    <h4>Other Relevant Medicines</h4>
-                    <div class="medicine-list"></div>
-                </div>
+        
+        <div class="search-results">
+            <div id="results-list"></div>
+            <div class="selection-controls">
+                <button type="button" class="btn btn-success" id="confirm-selection">Add Selected Medicines</button>
             </div>
         </div>
     </div>
@@ -86,13 +82,13 @@
                                 <select name="medicine_0" class="form-control" required>
                                     <option value="">Select Medicine</option>
                                     {% for medicine in medicines %}
-                                    <option value="{{ medicine.id }}">{{ medicine.name }} - {{ medicine.strength }}</option>
+                                    <option value="{{ medicine.id }}">{{ medicine.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-2 mb-3">
                                 <label>Dosage</label>
-                                <input type="text" name="dosage_0" class="form-control" required>
+                                <input type="text" name="dosage_0" class="form-control" value="{{ medicine.strength }}" readonly>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label>Duration (days)</label>
@@ -224,9 +220,11 @@
             formCounter++;
         });
 
-        const searchInput = document.getElementById('searchInput');
-        const searchButton = document.getElementById('searchButton');
-        const searchResults = document.getElementById('searchResults');
+        const searchInput = document.getElementById('medicine-search');
+        const searchButton = document.getElementById('search-button');
+        const resultsContainer = document.querySelector('.search-results');
+        const resultsList = document.getElementById('results-list');
+        const confirmButton = document.getElementById('confirm-selection');
 
         searchButton.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) {
@@ -236,83 +234,149 @@
         });
 
         function performSearch() {
-            const query = searchInput.value.trim();
-            if (!query) return;
+            const searchTerm = searchInput.value.trim();
+            if (!searchTerm) return;
 
-            fetch(`/medicines/search/?search=${encodeURIComponent(query)}`)
+            fetch(`/medicines/search/?search=${encodeURIComponent(searchTerm)}`)
                 .then(response => response.json())
                 .then(data => {
-                    searchResults.style.display = 'block';
-                    
-                    // Clear previous results
-                    document.querySelectorAll('.medicine-list').forEach(list => list.innerHTML = '');
-                    
-                    // Display categorized medicines
-                    if (data.categorized_medicines) {
-                        displayMedicineCategory('firstLineTreatments', data.categorized_medicines.FIRST_LINE);
-                        displayMedicineCategory('secondLineTreatments', data.categorized_medicines.SECOND_LINE);
-                        displayMedicineCategory('alternativeTreatments', data.categorized_medicines.ALTERNATIVE);
-                    }
-                    
-                    // Display direct matches
-                    if (data.direct_medicines) {
-                        const directMatchesList = document.querySelector('#directMatches .medicine-list');
-                        data.direct_medicines.forEach(medicine => {
-                            const medicineElement = createMedicineElement(medicine);
-                            directMatchesList.appendChild(medicineElement);
-                        });
-                    }
+                    displayResults(data.medicines);
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error performing search');
+                });
         }
 
-        function displayMedicineCategory(containerId, medicines) {
-            const container = document.querySelector(`#${containerId} .medicine-list`);
+        function displayResults(medicines) {
+            resultsList.innerHTML = '';
             if (medicines.length === 0) {
-                container.parentElement.style.display = 'none';
+                resultsList.innerHTML = '<p>No medicines found</p>';
                 return;
             }
-            
-            container.parentElement.style.display = 'block';
-            medicines.forEach(item => {
-                const medicineElement = createMedicineElement(item.medicine, item);
-                container.appendChild(medicineElement);
+
+            // Create the table structure first
+            const table = document.createElement('table');
+            table.className = 'table table-hover';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Name</th>
+                        <th>Form</th>
+                        <th>Strength</th>
+                        <th>Composition</th>
+                        <th>Manufacturer</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            resultsList.appendChild(table);
+
+            // Add rows to the tbody
+            const tbody = table.querySelector('tbody');
+            medicines.forEach(medicine => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <input class="form-check-input" type="checkbox" 
+                               value="${medicine.id}" 
+                               id="medicine-${medicine.id}"
+                               data-strength="${medicine.strength}">
+                    </td>
+                    <td>
+                        <label class="form-check-label" for="medicine-${medicine.id}">
+                            <strong>${medicine.name}</strong>
+                            <br>
+                            <small class="text-muted">Generic Name: ${medicine.generic_name}</small>
+                        </label>
+                    </td>
+                    <td>${medicine.form}</td>
+                    <td>${medicine.strength}</td>
+                    <td>${medicine.composition || '-'}</td>
+                    <td>${medicine.manufacturer || '-'}</td>
+                `;
+                tbody.appendChild(tr);
             });
+            
+            resultsContainer.style.display = 'block';
         }
 
-        function createMedicineElement(medicine, recommendationData = null) {
-            const div = document.createElement('div');
-            div.className = 'medicine-item';
-            
-            let content = `
-                <strong>${medicine.name}</strong> - ${medicine.strength}
-                <div class="mt-2">
-                    <small class="text-muted">${medicine.description}</small>
-                </div>
-            `;
-            
-            if (recommendationData) {
-                content += `
-                    <div class="mt-2">
-                        <span class="badge bg-info effectiveness-badge">
-                            Effectiveness: ${recommendationData.effectiveness_rating}/5
-                        </span>
-                        <div><small>${recommendationData.special_instructions}</small></div>
-                    </div>
-                `;
+        confirmButton.addEventListener('click', function() {
+            const selectedCheckboxes = Array.from(resultsList.querySelectorAll('input[type="checkbox"]:checked'));
+            if (selectedCheckboxes.length > 0) {
+                updateOrAddMedicineForms(selectedCheckboxes);
+                resultsContainer.style.display = 'none';
+                searchInput.value = '';
             }
+        });
+
+        function updateOrAddMedicineForms(selectedMedicines) {
+            const existingForms = document.querySelectorAll('.medicine-form');
+            const medicineFormsContainer = document.getElementById('medicine-forms');
             
-            div.innerHTML = content;
-            
-            // Add click handler to populate the prescription form
-            div.addEventListener('click', () => {
-                const select = document.querySelector('select[name="medicine_0"]');
+            // First, update existing forms
+            for (let i = 0; i < Math.min(existingForms.length, selectedMedicines.length); i++) {
+                const form = existingForms[i];
+                const checkbox = selectedMedicines[i];
+                const medicineId = checkbox.value;
+                const strength = checkbox.getAttribute('data-strength');
+                
+                const select = form.querySelector('select');
+                const dosageInput = form.querySelector('input[name^="dosage_"]');
+                
                 if (select) {
-                    select.value = medicine.id;
+                    select.value = medicineId;
+                }
+                if (dosageInput) {
+                    dosageInput.value = strength;
+                }
+            }
+
+            // Then add new forms for remaining medicines
+            for (let i = existingForms.length; i < selectedMedicines.length; i++) {
+                const checkbox = selectedMedicines[i];
+                addMedicineForm(checkbox.value, checkbox.getAttribute('data-strength'));
+            }
+        }
+
+        function addMedicineForm(medicineId, strength) {
+            const templateForm = document.querySelector('.medicine-form');
+            if (!templateForm) return;
+
+            const newForm = templateForm.cloneNode(true);
+            newForm.setAttribute('data-form-index', formCounter);
+
+            // Update form elements
+            newForm.querySelectorAll('input, select').forEach(input => {
+                const originalName = input.name;
+                const baseName = originalName.split('_')[0];
+                input.name = `${baseName}_${formCounter}`;
+                input.id = `${baseName}_${formCounter}`;
+                
+                if (input.tagName === 'SELECT') {
+                    input.value = medicineId;
+                } else if (input.name.startsWith(`dosage_${formCounter}`)) {
+                    input.value = strength;
+                } else {
+                    input.value = '';
                 }
             });
+
+            // Add delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-2';
+            deleteBtn.textContent = 'Remove';
+            deleteBtn.onclick = function() {
+                newForm.remove();
+            };
             
-            return div;
+            newForm.style.position = 'relative';
+            newForm.insertBefore(deleteBtn, newForm.firstChild);
+
+            document.getElementById('medicine-forms').appendChild(newForm);
+            formCounter++;
         }
     });
 </script>
