@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Medicine Details</h2>
+        {% if health_record_id %}
+        <a href="{% url 'records:medicine-details-create' %}?health_record={{ health_record_id }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Medicine
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Days</th>
+                    <th>Schedule</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detail in medicine_details %}
+                <tr>
+                    <td>{{ detail.medicine.name }}</td>
+                    <td>{{ detail.dosage }}</td>
+                    <td>{{ detail.days }}</td>
+                    <td>
+                        {% if detail.morning_before_meal or detail.morning_after_meal %}Morning{% endif %}
+                        {% if detail.afternoon_before_meal or detail.afternoon_after_meal %}Afternoon{% endif %}
+                        {% if detail.evening_before_meal or detail.evening_after_meal %}Evening{% endif %}
+                        {% if detail.night_before_meal or detail.night_after_meal %}Night{% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'records:medicine-details-update' detail.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{% url 'records:medicine-details-delete' detail.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No medicine details found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

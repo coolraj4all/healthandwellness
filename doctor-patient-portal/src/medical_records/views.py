@@ -6,6 +6,7 @@ from .models import PatientMedicalHistory, PatientSurgicalHistory, PatientHealth
 from .serializers import PatientMedicalHistorySerializer, PatientSurgicalHistorySerializer, PatientHealthDetailsSerializer
 from accounts.models import Patient
 from appointments.models import Appointment
+from medicines.models import Medicine
 
 class PatientMedicalHistoryViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -175,5 +176,108 @@ class PatientMedicationViewSet(viewsets.ViewSet):
         instance = get_object_or_404(PatientHealthDetails, pk=pk)
         instance.delete()
         return redirect('records:patient-health-list')
+
+class PatientMedicineDetailsViewSet(viewsets.ViewSet):
+    template_name = 'medical_records/medicine_details_list.html'
+    form_template_name = 'medical_records/medicine_details_form.html'
+
+    def list(self, request):
+        health_record_id = request.GET.get('health_record')
+        if health_record_id:
+            queryset = PatientMedicineDetails.objects.filter(patientHealthDetails_id=health_record_id)
+        else:
+            queryset = PatientMedicineDetails.objects.all()
+        return render(request, self.template_name, {
+            'medicine_details': queryset,
+            'health_record_id': health_record_id
+        })
+
+    def create(self, request):
+        if request.method == 'GET':
+            health_record_id = request.GET.get('health_record')
+            health_record = get_object_or_404(PatientHealthDetails, id=health_record_id)
+            context = {
+                'health_record': health_record,
+                'medicines': Medicine.objects.all(),
+            }
+            return render(request, self.form_template_name, context)
+
+        # Handle multiple medicine forms
+        health_record_id = request.POST.get('health_record')
+        created_records = []
+        
+        # Group form fields by medicine
+        medicine_forms = {}
+        for key, value in request.POST.items():
+            if key == 'csrfmiddlewaretoken' or key == 'health_record':
+                continue
+            # Split the field name to get the base name and form number
+            parts = key.split('_')
+            if len(parts) > 1 and parts[-1].isdigit():
+                form_num = parts[-1]
+                base_name = '_'.join(parts[:-1])
+            else:
+                form_num = '0'
+                base_name = key
+                
+            if form_num not in medicine_forms:
+                medicine_forms[form_num] = {}
+            medicine_forms[form_num][base_name] = value
+
+        # Create medicine details for each form
+        for form_data in medicine_forms.values():
+            if not form_data.get('medicine'):  # Skip if no medicine selected
+                continue
+                
+            medicine_details = PatientMedicineDetails(
+                patientHealthDetails_id=health_record_id,
+                medicine_id=form_data.get('medicine'),
+                dosage=form_data.get('dosage'),
+                morning_before_meal=form_data.get('morning_before_meal') == 'on',
+                morning_after_meal=form_data.get('morning_after_meal') == 'on',
+                afternoon_before_meal=form_data.get('afternoon_before_meal') == 'on',
+                afternoon_after_meal=form_data.get('afternoon_after_meal') == 'on',
+                evening_before_meal=form_data.get('evening_before_meal') == 'on',
+                evening_after_meal=form_data.get('evening_after_meal') == 'on',
+                night_before_meal=form_data.get('night_before_meal') == 'on',
+                night_after_meal=form_data.get('night_after_meal') == 'on',
+                days=form_data.get('days')
+            )
+            medicine_details.save()
+            created_records.append(medicine_details)
+
+        return redirect('records:medicine-details-list') + f'?health_record={health_record_id}'
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(PatientMedicineDetails, pk=pk)
+        
+        if request.method == 'GET':
+            context = {
+                'medicine_detail': instance,
+                'medicines': Medicine.objects.all(),
+                'health_record': instance.patientHealthDetails
+            }
+            return render(request, self.form_template_name, context)
+
+        instance.medicine_id = request.POST.get('medicine')
+        instance.dosage = request.POST.get('dosage')
+        instance.morning_before_meal = request.POST.get('morning_before_meal') == 'on'
+        instance.morning_after_meal = request.POST.get('morning_after_meal') == 'on'
+        instance.afternoon_before_meal = request.POST.get('afternoon_before_meal') == 'on'
+        instance.afternoon_after_meal = request.POST.get('afternoon_after_meal') == 'on'
+        instance.evening_before_meal = request.POST.get('evening_before_meal') == 'on'
+        instance.evening_after_meal = request.POST.get('evening_after_meal') == 'on'
+        instance.night_before_meal = request.POST.get('night_before_meal') == 'on'
+        instance.night_after_meal = request.POST.get('night_after_meal') == 'on'
+        instance.days = request.POST.get('days')
+        instance.save()
+        
+        return redirect('records:medicine-details-list') + f'?health_record={instance.patientHealthDetails_id}'
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(PatientMedicineDetails, pk=pk)
+        health_record_id = instance.patientHealthDetails_id
+        instance.delete()
+        return redirect('records:medicine-details-list') + f'?health_record={health_record_id}'
 
 

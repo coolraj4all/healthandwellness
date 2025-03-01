@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/medicine_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Prescribe Medicines</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="health_record" value="{{ health_record.id }}">
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Patient: {{ health_record.patient.first_name }} {{ health_record.patient.last_name }}
+            </div>
+            <div class="card-body">
+                <div id="medicine-forms">
+                    <div class="medicine-form border p-3 mb-3" data-form-index="0">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Medicine</label>
+                                <select name="medicine_0" class="form-control" required>
+                                    <option value="">Select Medicine</option>
+                                    {% for medicine in medicines %}
+                                    <option value="{{ medicine.id }}">{{ medicine.name }} - {{ medicine.strength }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label>Dosage</label>
+                                <input type="text" name="dosage_0" class="form-control" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Duration (days)</label>
+                                <input type="number" name="days_0" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Timing:</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="morning_before_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Morning Before Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="morning_after_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Morning After Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="afternoon_before_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Afternoon Before Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="afternoon_after_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Afternoon After Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="evening_before_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Evening Before Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="evening_after_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Evening After Meal</label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input type="checkbox" name="night_before_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Night Before Meal</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="night_after_meal_0" class="form-check-input">
+                                        <label class="form-check-label">Night After Meal</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end mb-3">
+                    <button type="button" class="btn btn-secondary" id="add-medicine">Add Another Medicine</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary">Save Prescription</button>
+            <a href="{% url 'records:medicine-details-list' %}?health_record={{ health_record.id }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+
+
+{% block extra_js %}
+<script>
+    let formCounter = 1;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const handleResourceError = (event) => {
+            console.error('Failed to load resource:', event.target.src || event.target.href);
+        };
+
+        document.querySelectorAll('link, script').forEach(element => {
+            element.addEventListener('error', handleResourceError);
+        });
+
+        document.getElementById('add-medicine').addEventListener('click', function() {
+            // Get the template
+            const templateForm = document.querySelector('.medicine-form');
+            if (!templateForm) {
+                console.error('Medicine form template not found');
+                return;
+            }
+
+            // Create a new form by cloning
+            const newForm = templateForm.cloneNode(true);
+            
+            // Update form index
+            newForm.setAttribute('data-form-index', formCounter);
+            
+            // Update all input names and clear values
+            newForm.querySelectorAll('input, select').forEach(input => {
+                const originalName = input.name;
+                const baseName = originalName.split('_')[0];
+                const newName = `${baseName}_${formCounter}`;
+                input.name = newName;
+                input.id = newName; // Also update ID to maintain label associations
+                
+                // Reset values
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else if (input.tagName === 'SELECT') {
+                    input.selectedIndex = 0;
+                } else {
+                    input.value = '';
+                }
+            });
+
+            // Update labels' for attributes
+            newForm.querySelectorAll('label[for]').forEach(label => {
+                const originalFor = label.getAttribute('for');
+                if (originalFor) {
+                    const baseFor = originalFor.split('_')[0];
+                    label.setAttribute('for', `${baseFor}_${formCounter}`);
+                }
+            });
+
+            // Add delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-2';
+            deleteBtn.textContent = 'Remove';
+            deleteBtn.onclick = function() {
+                newForm.remove();
+            };
+            newForm.style.position = 'relative'; // Ensure proper positioning of delete button
+            newForm.insertBefore(deleteBtn, newForm.firstChild);
+
+            // Append the new form
+            document.getElementById('medicine-forms').appendChild(newForm);
+            formCounter++;
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}
