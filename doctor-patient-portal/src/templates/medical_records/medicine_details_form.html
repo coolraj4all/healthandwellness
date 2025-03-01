@@ -3,11 +3,72 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/medicine_form.css' %}">
+<style>
+    .search-results {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .medicine-category {
+        margin-bottom: 20px;
+    }
+    .medicine-item {
+        padding: 10px;
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    .effectiveness-badge {
+        float: right;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>Prescribe Medicines</h2>
+    
+    <!-- Add Search Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Search Medicines by Symptoms
+        </div>
+        <div class="card-body">
+            <div class="input-group mb-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="Enter symptoms...">
+                <button class="btn btn-primary" type="button" id="searchButton">Search</button>
+            </div>
+            
+            <!-- Search Results Section -->
+            <div id="searchResults" class="search-results" style="display: none;">
+                <!-- First Line Treatments -->
+                <div class="medicine-category" id="firstLineTreatments">
+                    <h4>First Line Treatments</h4>
+                    <div class="medicine-list"></div>
+                </div>
+                
+                <!-- Second Line Treatments -->
+                <div class="medicine-category" id="secondLineTreatments">
+                    <h4>Second Line Treatments</h4>
+                    <div class="medicine-list"></div>
+                </div>
+                
+                <!-- Alternative Treatments -->
+                <div class="medicine-category" id="alternativeTreatments">
+                    <h4>Alternative Treatments</h4>
+                    <div class="medicine-list"></div>
+                </div>
+                
+                <!-- Direct Medicine Matches -->
+                <div class="medicine-category" id="directMatches">
+                    <h4>Other Relevant Medicines</h4>
+                    <div class="medicine-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="post" class="needs-validation" novalidate>
         {% csrf_token %}
         <input type="hidden" name="health_record" value="{{ health_record.id }}">
@@ -93,8 +154,6 @@
     </form>
 </div>
 
-
-
 {% block extra_js %}
 <script>
     let formCounter = 1;
@@ -164,6 +223,97 @@
             document.getElementById('medicine-forms').appendChild(newForm);
             formCounter++;
         });
+
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResults = document.getElementById('searchResults');
+
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            fetch(`/medicines/search/?search=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.style.display = 'block';
+                    
+                    // Clear previous results
+                    document.querySelectorAll('.medicine-list').forEach(list => list.innerHTML = '');
+                    
+                    // Display categorized medicines
+                    if (data.categorized_medicines) {
+                        displayMedicineCategory('firstLineTreatments', data.categorized_medicines.FIRST_LINE);
+                        displayMedicineCategory('secondLineTreatments', data.categorized_medicines.SECOND_LINE);
+                        displayMedicineCategory('alternativeTreatments', data.categorized_medicines.ALTERNATIVE);
+                    }
+                    
+                    // Display direct matches
+                    if (data.direct_medicines) {
+                        const directMatchesList = document.querySelector('#directMatches .medicine-list');
+                        data.direct_medicines.forEach(medicine => {
+                            const medicineElement = createMedicineElement(medicine);
+                            directMatchesList.appendChild(medicineElement);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayMedicineCategory(containerId, medicines) {
+            const container = document.querySelector(`#${containerId} .medicine-list`);
+            if (medicines.length === 0) {
+                container.parentElement.style.display = 'none';
+                return;
+            }
+            
+            container.parentElement.style.display = 'block';
+            medicines.forEach(item => {
+                const medicineElement = createMedicineElement(item.medicine, item);
+                container.appendChild(medicineElement);
+            });
+        }
+
+        function createMedicineElement(medicine, recommendationData = null) {
+            const div = document.createElement('div');
+            div.className = 'medicine-item';
+            
+            let content = `
+                <strong>${medicine.name}</strong> - ${medicine.strength}
+                <div class="mt-2">
+                    <small class="text-muted">${medicine.description}</small>
+                </div>
+            `;
+            
+            if (recommendationData) {
+                content += `
+                    <div class="mt-2">
+                        <span class="badge bg-info effectiveness-badge">
+                            Effectiveness: ${recommendationData.effectiveness_rating}/5
+                        </span>
+                        <div><small>${recommendationData.special_instructions}</small></div>
+                    </div>
+                `;
+            }
+            
+            div.innerHTML = content;
+            
+            // Add click handler to populate the prescription form
+            div.addEventListener('click', () => {
+                const select = document.querySelector('select[name="medicine_0"]');
+                if (select) {
+                    select.value = medicine.id;
+                }
+            });
+            
+            return div;
+        }
     });
 </script>
 {% endblock %}

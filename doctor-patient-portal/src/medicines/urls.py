@@ -4,6 +4,9 @@ from . import views
 app_name = 'medicines'
 
 urlpatterns = [    
+    # Add this new URL pattern
+    path('search/', views.search_medicines, name='medicine-search'),
+    
     # Template views for Manufacturer
     path('manufacturer/', views.ManufacturerListView.as_view(), name='manufacturer-list'),
     path('manufacturer/create/', views.ManufacturerCreateView.as_view(), name='manufacturer-create'),

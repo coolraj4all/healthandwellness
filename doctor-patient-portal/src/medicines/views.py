@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect,get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -8,6 +9,8 @@ from .serializers import ManufacturerSerializer, MedicineSerializer, BrandSerial
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from .form import BrandForm
+from django.db.models import Q
+from diseases.models import Disease
 
 class MedicineRecommendationViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -221,3 +224,47 @@ class BrandDeleteView(DeleteView):
     model = Brand
     template_name = 'medicines/brand_confirm_delete.html'
     success_url = reverse_lazy('medicines:brand-list')
+
+def search_medicines(request):
+    search_query = request.GET.get('search', '')
+    medicines_list = []
+    
+    if search_query:
+        # Search diseases by symptoms
+        diseases = Disease.objects.filter(symptoms__icontains=search_query)
+        
+        # Get medicine recommendations for found diseases
+        medicine_recommendations = MedicineRecommendation.objects.filter(
+            disease__in=diseases
+        ).select_related('disease')
+        
+        # Organize medicines by recommendation type
+        categorized_medicines = {
+            'FIRST_LINE': [],
+            'SECOND_LINE': [],
+            'ALTERNATIVE': []
+        }
+        
+        for rec in medicine_recommendations:
+            for medicine in rec.medicine_recommendations.all():
+                categorized_medicines[rec.recommendation_type].append({
+                    'medicine': medicine,
+                    'disease': rec.disease,
+                    'special_instructions': rec.special_instructions,
+                    'effectiveness_rating': rec.effectiveness_rating
+                })
+        
+        # Also search directly in medicines
+        direct_medicines = Medicine.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(generic_name__icontains=search_query)
+        )
+        
+        return JsonResponse({
+            'categorized_medicines': categorized_medicines,
+            'direct_medicines': list(direct_medicines.values()),
+            'query': search_query
+        })
+    
+    return JsonResponse({'error': 'No search query provided'})
