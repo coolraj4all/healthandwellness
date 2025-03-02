@@ -34,4 +34,8 @@ urlpatterns = [
     path('medicine-details/<int:pk>/delete/', views.PatientMedicineDetailsViewSet.as_view({
         'post': 'destroy'
     }), name='medicine-details-delete'),
+
+    path('patient-health/<int:pk>/pdf/', 
+         views.PatientMedicationViewSet.as_view({'get': 'generate_pdf'}), 
+         name='patient-health-pdf'),
 ]

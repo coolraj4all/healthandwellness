@@ -85,6 +85,10 @@
                             <a href="{% url 'records:patient-health-update' appointment.appointment_details.id %}" class="btn btn-success btn-sm" title="Update Health Record">
                                 <i class="fas fa-notes-medical"></i>
                             </a>
+                            <!-- Add PDF generation button -->
+                            <a href="{% url 'records:patient-health-pdf' appointment.appointment_details.id %}" class="btn btn-danger btn-sm" title="Generate PDF" target="_blank">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
                             {% else %}
                             <a href="{% url 'records:patient-health-create' %}?appointment={{ appointment.id }}&patient={{ appointment.patient.id }}" class="btn btn-primary btn-sm" title="Create Health Record">
                                 <i class="fas fa-plus-circle"></i>

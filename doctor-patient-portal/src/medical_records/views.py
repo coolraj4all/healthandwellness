@@ -1,3 +1,5 @@
+from io import BytesIO
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -8,6 +10,17 @@ from accounts.models import Patient
 from appointments.models import Appointment
 from medicines.models import Medicine
 from django.urls import reverse
+from django.shortcuts import get_object_or_404
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm, mm, inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph
+from datetime import datetime
+from rest_framework.decorators import action
+from medical_records.utils import generate_prescription_pdf
 
 class PatientMedicalHistoryViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -177,6 +190,27 @@ class PatientMedicationViewSet(viewsets.ViewSet):
         instance = get_object_or_404(PatientHealthDetails, pk=pk)
         instance.delete()
         return redirect('records:patient-health-list')
+    
+    @action(detail=True, methods=['get'])
+    def generate_pdf(self, request, pk=None):
+        """
+        Generate and return a prescription PDF for the specified health record.
+        """
+        health_record = get_object_or_404(PatientHealthDetails, pk=pk)
+        
+        # Generate the PDF
+        pdf_content = generate_prescription_pdf(health_record)
+        
+        # Create the HTTP response with PDF content
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        
+        # Set the Content-Disposition header to make the browser download the file
+        patient_name = f"{health_record.patient.first_name}_{health_record.patient.last_name}" if hasattr(health_record.patient, 'first_name') else "patient"
+        appointment_date = health_record.appointment.appointment_date.strftime('%Y%m%d') if hasattr(health_record.appointment, 'appointment_date') else "date"
+        filename = f"prescription_{patient_name}_{appointment_date}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
 
 class PatientMedicineDetailsViewSet(viewsets.ViewSet):
     template_name = 'medical_records/medicine_details_list.html'
