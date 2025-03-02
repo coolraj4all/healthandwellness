@@ -75,7 +75,7 @@
             </div>
             <div class="card-body">
                 <div id="medicine-forms">
-                    <div class="medicine-form border p-3 mb-3" data-form-index="0">
+                    <div class="medicine-form border p-3 mb-3 position-relative" data-form-index="0">
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label>Medicine</label>
@@ -180,18 +180,23 @@
             // Update all input names and clear values
             newForm.querySelectorAll('input, select').forEach(input => {
                 const originalName = input.name;
-                const baseName = originalName.split('_')[0];
-                const newName = `${baseName}_${formCounter}`;
-                input.name = newName;
-                input.id = newName; // Also update ID to maintain label associations
+                if (!originalName) return; // Skip if no name attribute
                 
-                // Reset values
+                // Handle checkbox names differently
                 if (input.type === 'checkbox') {
+                    const baseName = originalName.replace(/_\d+$/, ''); // Remove trailing number
+                    input.name = `${baseName}_${formCounter}`;
+                    input.id = `${baseName}_${formCounter}`;
                     input.checked = false;
-                } else if (input.tagName === 'SELECT') {
-                    input.selectedIndex = 0;
                 } else {
-                    input.value = '';
+                    const baseName = originalName.substring(0, originalName.lastIndexOf('_'));
+                    input.name = `${baseName}_${formCounter}`;
+                    input.id = `${baseName}_${formCounter}`;
+                    if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    } else {
+                        input.value = '';
+                    }
                 }
             });
 
@@ -342,15 +347,21 @@
 
         function addMedicineForm(medicineId, strength) {
             const templateForm = document.querySelector('.medicine-form');
-            if (!templateForm) return;
+            if (!templateForm) {
+                console.error('Medicine form template not found');
+                return;
+            }
 
+            // Create a new form by cloning
             const newForm = templateForm.cloneNode(true);
+            
+            // Update form index
             newForm.setAttribute('data-form-index', formCounter);
 
             // Update form elements
             newForm.querySelectorAll('input, select').forEach(input => {
                 const originalName = input.name;
-                const baseName = originalName.split('_')[0];
+                const baseName = originalName.substring(0, originalName.lastIndexOf('_'));
                 input.name = `${baseName}_${formCounter}`;
                 input.id = `${baseName}_${formCounter}`;
                 
@@ -358,8 +369,20 @@
                     input.value = medicineId;
                 } else if (input.name.startsWith(`dosage_${formCounter}`)) {
                     input.value = strength;
+                } else if (input.type === 'checkbox') {
+                    const baseName = originalName.replace(/_\d+$/, ''); // Remove trailing number
+                    input.name = `${baseName}_${formCounter}`;
+                    input.id = `${baseName}_${formCounter}`;
+                    input.checked = false;
                 } else {
-                    input.value = '';
+                    const baseName = originalName.substring(0, originalName.lastIndexOf('_'));
+                    input.name = `${baseName}_${formCounter}`;
+                    input.id = `${baseName}_${formCounter}`;
+                    if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    } else {
+                        input.value = '';
+                    }
                 }
             });
 

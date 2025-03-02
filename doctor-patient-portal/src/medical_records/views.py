@@ -7,6 +7,7 @@ from .serializers import PatientMedicalHistorySerializer, PatientSurgicalHistory
 from accounts.models import Patient
 from appointments.models import Appointment
 from medicines.models import Medicine
+from django.urls import reverse
 
 class PatientMedicalHistoryViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -246,7 +247,9 @@ class PatientMedicineDetailsViewSet(viewsets.ViewSet):
             medicine_details.save()
             created_records.append(medicine_details)
 
-        return redirect('records:medicine-details-list') + f'?health_record={health_record_id}'
+        # After creating all medicine details
+        base_url = reverse('records:patient-health-update', kwargs={'pk': health_record_id})
+        return redirect(f'{base_url}')
 
     def update(self, request, pk=None):
         instance = get_object_or_404(PatientMedicineDetails, pk=pk)
@@ -272,12 +275,14 @@ class PatientMedicineDetailsViewSet(viewsets.ViewSet):
         instance.days = request.POST.get('days')
         instance.save()
         
-        return redirect('records:medicine-details-list') + f'?health_record={instance.patientHealthDetails_id}'
+        base_url = reverse('records:medicine-details-list')
+        return redirect(f'{base_url}?health_record={instance.patientHealthDetails_id}')
 
     def destroy(self, request, pk=None):
         instance = get_object_or_404(PatientMedicineDetails, pk=pk)
         health_record_id = instance.patientHealthDetails_id
         instance.delete()
-        return redirect('records:medicine-details-list') + f'?health_record={health_record_id}'
+        base_url = reverse('records:medicine-details-list')
+        return redirect(f'{base_url}?health_record={health_record_id}')
 
 
