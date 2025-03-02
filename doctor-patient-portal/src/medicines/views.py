@@ -225,6 +225,48 @@ class BrandDeleteView(DeleteView):
     template_name = 'medicines/brand_confirm_delete.html'
     success_url = reverse_lazy('medicines:brand-list')
 
+class MedicineRecommendationListView(ListView):
+    model = MedicineRecommendation
+    context_object_name = 'recommendations'
+    template_name = 'medicines/recommendation_list.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = MedicineRecommendation.objects.all()
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(disease__name__icontains=search_query) |
+                Q(medicine__name__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
+
+class MedicineRecommendationCreateView(CreateView):
+    model = MedicineRecommendation
+    fields = ['disease', 'medicine', 'special_instructions', 'contraindications', 'effectiveness_rating']
+    template_name = 'medicines/recommendation_form.html'
+    success_url = reverse_lazy('medicines:recommendation-list')
+
+class MedicineRecommendationUpdateView(UpdateView):
+    model = MedicineRecommendation
+    fields = ['disease', 'medicine', 'special_instructions', 'contraindications', 'effectiveness_rating']
+    template_name = 'medicines/recommendation_form.html'
+    success_url = reverse_lazy('medicines:recommendation-list')
+
+class MedicineRecommendationDetailView(DetailView):
+    model = MedicineRecommendation
+    template_name = 'medicines/recommendation_detail.html'
+
+class MedicineRecommendationDeleteView(DeleteView):
+    model = MedicineRecommendation
+    template_name = 'medicines/recommendation_confirm_delete.html'
+    success_url = reverse_lazy('medicines:recommendation-list')
+
 def search_medicines(request):
     search_query = request.GET.get('search', '')
     search_query = f"%{search_query}%"

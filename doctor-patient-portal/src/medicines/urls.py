@@ -27,5 +27,12 @@ urlpatterns = [
     path('brand/<int:pk>/', views.BrandDetailView.as_view(), name='brand-detail'),
     path('brand/<int:pk>/update/', views.BrandUpdateView.as_view(), name='brand-update'),
     path('brand/<int:pk>/delete/', views.BrandDeleteView.as_view(), name='brand-delete'),
+    
+    # Template views for MedicineRecommendation
+    path('recommendation/', views.MedicineRecommendationListView.as_view(), name='recommendation-list'),
+    path('recommendation/create/', views.MedicineRecommendationCreateView.as_view(), name='recommendation-create'),
+    path('recommendation/<int:pk>/', views.MedicineRecommendationDetailView.as_view(), name='recommendation-detail'),
+    path('recommendation/<int:pk>/update/', views.MedicineRecommendationUpdateView.as_view(), name='recommendation-update'),
+    path('recommendation/<int:pk>/delete/', views.MedicineRecommendationDeleteView.as_view(), name='recommendation-delete'),
 ]
 
