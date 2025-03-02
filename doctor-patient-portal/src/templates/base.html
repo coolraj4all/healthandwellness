@@ -27,7 +27,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:home' %}">Home</a>
                     </li>
-                    {% if user.is_authenticated and user.user_type.user_type in 'Admin,Doctor' %}
+                    {% if user.is_authenticated and user.user_type.user_type in 'Admin,Doctor,Receptionist' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:patient-list' %}">Patients</a>
                         </li>
@@ -37,15 +37,22 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'appointments:appointment-list' %}">Appointments</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'medicines:manufacturer-list' %}">Medicine</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'medicines:brand-list' %}">Brands</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'medicines:recommendation-list' %}">Recommendations</a>
-                        </li>
+                        {% if user.user_type.user_type == 'Admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'accounts:user-list' %}">Users</a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_authenticated and user.user_type.user_type in 'Doctor' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'medicines:manufacturer-list' %}">Medicine</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'medicines:brand-list' %}">Brands</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'medicines:recommendation-list' %}">Recommendations</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">

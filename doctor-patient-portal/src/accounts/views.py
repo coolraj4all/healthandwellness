@@ -13,6 +13,10 @@ from .serializers import (UserSerializer, PatientSerializer,
 from .models import User, Patient, Doctor, Receptionist, UserTypes
 from .forms import UserRegistrationForm, PatientForm, DoctorForm
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from .forms import ProfileEditForm, PasswordChangeCustomForm
 
 def home(request):
     return render(request, 'home.html')
@@ -37,7 +41,9 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return redirect('accounts:home')  # Redirect to a success page or home
-    return render(request, 'accounts/login.html')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    return render(request, 'home.html')
 
 def logout_view(request):
     logout(request)
@@ -61,6 +67,33 @@ def password_reset(request):
     else:
         form = PasswordResetForm()
     return render(request, 'accounts/password_reset.html', {'form': form})
+
+@login_required
+def profile_edit(request):
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully.')
+            return redirect('accounts:profile')
+    else:
+        form = ProfileEditForm(instance=request.user)
+    return render(request, 'accounts/profile_edit.html', {'form': form})
+
+@login_required
+def password_change(request):
+    if request.method == 'POST':
+        form = PasswordChangeCustomForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('accounts:profile')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeCustomForm(request.user)
+    return render(request, 'accounts/password_change.html', {'form': form})
 
 def patient_list(request):
     search_query = request.GET.get('search', '')
@@ -172,6 +205,50 @@ def doctor_to_user(request, pk):
         
         return redirect('accounts:doctor-list')
     return redirect('accounts:doctor-list')
+
+@login_required
+def user_list(request):
+    if not request.user.user_type.user_type == 'Admin':
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('accounts:home')
+    
+    search_query = request.GET.get('search', '')
+    user_list = User.objects.all()
+    
+    if search_query:
+        user_list = user_list.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(user_list, 10)
+    page_number = request.GET.get('page')
+    users = paginator.get_page(page_number)
+    
+    return render(request, 'accounts/users/user_list.html', {
+        'users': users,
+        'search_query': search_query
+    })
+
+@login_required
+def change_user_password(request, user_id):
+    if not request.user.user_type.user_type == 'Admin':
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('accounts:home')
+    
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        if new_password:
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, f'Password changed successfully for user {user.username}')
+        else:
+            messages.error(request, 'Please provide a new password')
+    
+    return redirect('accounts:user-list')
 
 class UserTypeViewSet(viewsets.ModelViewSet):
     queryset = UserTypes.objects.all()

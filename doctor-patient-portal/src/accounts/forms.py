@@ -1,6 +1,10 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import User, UserTypes, Patient, Doctor
+
+GENDERS = [
+        ('Male','Male'), ('Female','Female'), ('Other','Other')
+    ]
 
 class UserRegistrationForm(UserCreationForm):
     user_type = forms.ModelChoiceField(
@@ -58,3 +62,25 @@ class DoctorForm(forms.ModelForm):
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone', 'gender']
+        widgets = {
+            'gender': forms.Select(choices=GENDERS),
+        }
+
+class PasswordChangeCustomForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Current Password'
+    )
+    new_password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='New Password'
+    )
+    new_password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirm New Password'
+    )

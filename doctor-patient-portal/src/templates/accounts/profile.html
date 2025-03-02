@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Profile - {{ user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-user-circle me-2"></i>Profile Information
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Full Name</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.get_full_name }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Username</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.username }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Email</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.email }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Phone</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.phone }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Gender</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.gender }}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3">
+                            <h6 class="mb-0">Role</h6>
+                        </div>
+                        <div class="col-sm-9 text-secondary">
+                            {{ user.user_type.user_type }}
+                        </div>
+                    </div>
+
+                    {% if user.user_type.user_type == 'Patient' and user.patient %}
+                        <hr>
+                        <h4 class="mb-3">Patient Details</h4>
+                        <div class="row mb-4">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Blood Group</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                {{ user.patient.blood_group }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Date of Birth</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                {{ user.patient.date_of_birth }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if user.user_type.user_type == 'Doctor' and user.doctor %}
+                        <hr>
+                        <h4 class="mb-3">Doctor Details</h4>
+                        <div class="row mb-4">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Specialization</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                {{ user.doctor.specialization }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">License Number</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                {{ user.doctor.license_number }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <a class="btn btn-primary" href="{% url 'accounts:profile-edit' %}">Edit Profile</a>
+                            <a class="btn btn-outline-primary" href="{% url 'accounts:password-change' %}">Change Password</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
