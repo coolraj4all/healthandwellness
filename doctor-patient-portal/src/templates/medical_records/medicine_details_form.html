@@ -50,11 +50,18 @@
 <div class="container mt-4">
     <h2>Prescribe Medicines</h2>
 
-    <!-- Add search section before the form -->
+    <!-- Update search section -->
     <div class="search-container">
         <div class="input-group">
-            <input type="text" id="medicine-search" class="form-control" placeholder="Search medicines by symptoms...">
-            <button class="btn btn-primary" type="button" id="search-button">Search</button>
+            <select class="form-select" id="search-type" style="max-width: 150px;">
+                <option value="symptoms">Symptoms</option>
+                <option value="medicine">Medicine</option>
+            </select>
+            <input type="text" 
+                   id="medicine-search" 
+                   class="form-control" 
+                   placeholder="Start typing to search (minimum 2 characters)..."
+                   autocomplete="off">
         </div>
         
         <div class="search-results">
@@ -226,30 +233,48 @@
         });
 
         const searchInput = document.getElementById('medicine-search');
-        const searchButton = document.getElementById('search-button');
+        const searchType = document.getElementById('search-type');
         const resultsContainer = document.querySelector('.search-results');
         const resultsList = document.getElementById('results-list');
         const confirmButton = document.getElementById('confirm-selection');
 
-        searchButton.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
+        let searchTimeout;
+
+        // Update search input handler with 2 second delay
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const searchTerm = e.target.value.trim();
+            
+            if (searchTerm.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            // Set timeout to 2000ms (2 seconds)
+            searchTimeout = setTimeout(() => {
+                performSearch(searchTerm);
+            }, 2000);
+        });
+
+        // Update search type change handler
+        searchType.addEventListener('change', function() {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length >= 2) {
+                performSearch(searchTerm);
             }
         });
 
-        function performSearch() {
-            const searchTerm = searchInput.value.trim();
-            if (!searchTerm) return;
-
-            fetch(`/medicines/search/?search=${encodeURIComponent(searchTerm)}`)
+        function performSearch(searchTerm) {
+            const searchTypeValue = searchType.value;
+            
+            fetch(`/medicines/search/?search=${encodeURIComponent(searchTerm)}&type=${searchTypeValue}`)
                 .then(response => response.json())
                 .then(data => {
                     displayResults(data.medicines);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error performing search');
+                    resultsContainer.style.display = 'none';
                 });
         }
 

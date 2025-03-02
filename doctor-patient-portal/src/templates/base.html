@@ -44,7 +44,10 @@
                         {% endif %}
                         {% if user.is_authenticated and user.user_type.user_type in 'Doctor' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'medicines:manufacturer-list' %}">Medicine</a>
+                                <a class="nav-link" href="{% url 'diseases:disease-list' %}">Diseases</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'medicines:medicine-list' %}">Medicine</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'medicines:brand-list' %}">Brands</a>

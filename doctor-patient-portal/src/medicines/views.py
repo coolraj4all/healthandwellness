@@ -268,24 +268,29 @@ class MedicineRecommendationDeleteView(DeleteView):
     success_url = reverse_lazy('medicines:recommendation-list')
 
 def search_medicines(request):
-    search_query = request.GET.get('search', '')
-    search_query = f"%{search_query}%"
+    search_query = request.GET.get('search', '').strip()
+    search_type = request.GET.get('type', 'symptoms')
     medicines_list = []
     
-    if search_query:
-        # Update the disease filter to use case-insensitive contains lookup
-        # This is equivalent to SELECT * FROM public.diseases_disease where symptoms like '%Cough%'
-        diseases = Disease.objects.filter(symptoms__icontains=search_query.strip('%'))
-        
-        # Get medicine recommendations for found diseases
-        medicine_recommendations = MedicineRecommendation.objects.filter(
-            disease__in=diseases
-        ).select_related('disease')
+    if len(search_query) >= 2:  # Only search if 2 or more characters
+        if search_type == 'symptoms':
+            # Optimize symptoms-based search
+            diseases = Disease.objects.filter(symptoms__icontains=search_query).distinct()
 
-        # Get medicines for found recommendations
-        for recommendation in medicine_recommendations:
-            medicines_list.append(recommendation.medicine)   
-    # Convert medicines list to a list of dictionaries
+            medicine_recommendations = MedicineRecommendation.objects.filter(
+                disease__in=diseases
+            ).select_related('disease')
+
+            for recommendation in medicine_recommendations:
+                if recommendation.medicine not in medicines_list:
+                    medicines_list.append(recommendation.medicine)
+        else:
+            # Optimize medicine name search
+            medicines_list = Medicine.objects.filter(
+                Q(name__icontains=search_query) |
+                Q(generic_name__icontains=search_query)
+            ).distinct()[:10]  # Limit results for better performance
+
     medicines_data = [
         {
             'id': medicine.id,
@@ -293,7 +298,8 @@ def search_medicines(request):
             'form': medicine.form,
             'strength': medicine.strength,
             'composition': medicine.composition,
-            'manufacturer': medicine.manufacturer.name  # Convert decimal to string for JSON
+            'manufacturer': medicine.manufacturer.name if medicine.manufacturer else '',
+            'generic_name': medicine.generic_name
         }
         for medicine in medicines_list
     ]
