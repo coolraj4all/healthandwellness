@@ -5,3 +5,8 @@ django-cors-headers
 Pillow
 drf_yasg
 python-dotenv
+str2bool
+django-cors-headers
+gunicorn
+django-widget-tweaks
+reportlab

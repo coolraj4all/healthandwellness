@@ -1,0 +1,59 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 --chdir /app/src portal.wsgi:application
+    volumes:
+      - .:/app
+      - static_volume:/app/src/staticfiles
+      - media_volume:/app/src/mediafiles
+    expose:
+      - 8000
+    environment:
+      - DB_ENGINE=postgresql
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USERNAME=postgres
+      - DB_PASS=postgres
+      - DB_PORT=5432
+      - DEBUG=TRUE
+      - SECRET_KEY=abcdefghijklmnopqrstuvwxys123456
+    depends_on:
+      - db
+    networks:
+      - app_network
+
+  db:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - app_network
+
+  nginx:
+    image: nginx:1.25
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  app_network:
+    driver: bridge
