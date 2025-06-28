@@ -10,3 +10,5 @@ django-cors-headers
 gunicorn
 django-widget-tweaks
 reportlab
+django-session-timeout
+whitenoise>=6.6.0
