@@ -17,7 +17,7 @@ services:
       - 8001
     environment:
       - DB_ENGINE=postgresql
-      - DB_HOST=nanavati_automobiles_app-db
+      - DB_HOST=db
       - DB_NAME=healthcaredatabase
       - DB_USERNAME=postgres
       - DB_PASS=postgres
@@ -28,7 +28,7 @@ services:
     networks:
       - app_network
     depends_on:
-      - nanavati_automobiles_app-db
+      - db
 
 volumes:
   static_volume:
