@@ -24,7 +24,7 @@ RUN chmod +x /app/src/manage.py
 # Add the project root to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
-EXPOSE 8001
+EXPOSE 8000
 
 # Update the command to use the correct path
-CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--chdir", "/app/doctor-patient-portal/src", "portal.wsgi:application","--workers", "1"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--chdir", "/app/doctor-patient-portal/src", "portal.wsgi:application","--workers", "1"]
