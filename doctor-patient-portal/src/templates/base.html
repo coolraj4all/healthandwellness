@@ -43,17 +43,30 @@
                             </li>
                         {% endif %}
                         {% if user.is_authenticated and user.user_type.user_type in 'Doctor' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'diseases:disease-list' %}">Diseases</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'medicines:medicine-list' %}">Medicine</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'medicines:brand-list' %}">Brands</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'medicines:recommendation-list' %}">Recommendations</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="configurationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Configurations
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="configurationsDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'medicines:manufacturer-list' %}">Manufacturers</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'medicines:brand-list' %}">Brands</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'diseases:category-list' %}">Diseases Categories</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'diseases:disease-list' %}">Diseases</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'medicines:medicine-list' %}">Medicine</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'medicines:recommendation-list' %}">Recommendations</a>
+                                    </li>
+                                </ul>
                             </li>
                         {% endif %}
                     {% endif %}
