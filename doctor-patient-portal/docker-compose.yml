@@ -25,27 +25,10 @@ services:
       - DEBUG=TRUE
       - SECRET_KEY=abcdefghijklmnopqrstuvwxys123456
       - ALLOWED_HOSTS=18.207.2.107,drmakwanaclinic.link
-    depends_on:
-      - db
-    networks:
-      - app_network
-
-  db:
-    image: postgres:14
-    ports:
-      - "6433:6432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_INITDB_ARGS=--schema=healthcaredatabase
     networks:
       - app_network
 
 volumes:
-  postgres_data:
   static_volume:
   media_volume:
 
