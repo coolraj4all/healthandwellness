@@ -27,8 +27,6 @@ services:
       - ALLOWED_HOSTS=18.207.2.107,drmakwanaclinic.link
     networks:
       - app_network
-    depends_on:
-      - db
 
 volumes:
   static_volume:
